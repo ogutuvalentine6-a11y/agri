@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgroNexus — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+:root{
+  --soil:#2C1A0E;--bark:#4A2C17;--moss:#3D5A2C;
+  --leaf:#5A8C3D;--sprout:#7CB855;--harvest:#E8A020;
+  --sun:#F5C842;--cream:#F7F2E8;--ash:#B8B0A0;--white:#FDFAF4;
+  --danger:#e05252;--card:rgba(247,242,232,.05);--border:rgba(247,242,232,.09);
+  --admin-accent:#c4872a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:#1a0e06;color:var(--cream);min-height:100vh;display:flex;}
+
+/* ─── SIDEBAR ─── */
+.sidebar{
+  width:260px;flex-shrink:0;
+  background:rgba(0,0,0,.5);
+  border-right:1px solid rgba(196,135,42,.15);
+  display:flex;flex-direction:column;padding:1.5rem 0;
+  position:fixed;top:0;left:0;bottom:0;z-index:200;
+}
+.sb-logo{
+  display:flex;align-items:center;gap:.65rem;
+  font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:900;
+  color:var(--admin-accent);padding:0 1.5rem 1.5rem;
+  border-bottom:1px solid rgba(196,135,42,.15);
+}
+.admin-badge{
+  background:rgba(196,135,42,.2);color:var(--admin-accent);
+  font-size:.65rem;font-weight:700;padding:.2rem .5rem;border-radius:6px;
+  letter-spacing:.06em;text-transform:uppercase;margin-left:.5rem;
+}
+.sb-menu{flex:1;padding:1.5rem 0;overflow-y:auto;}
+.sb-section{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ash);padding:.3rem 1.5rem .6rem;margin-top:.75rem;}
+.sb-item{
+  display:flex;align-items:center;gap:.85rem;
+  padding:.75rem 1.5rem;color:var(--ash);cursor:pointer;
+  transition:background .2s,color .2s;font-size:.92rem;font-weight:500;
+  border-left:3px solid transparent;
+}
+.sb-item:hover{background:rgba(196,135,42,.07);color:var(--cream);}
+.sb-item.active{background:rgba(196,135,42,.12);color:var(--admin-accent);border-left-color:var(--admin-accent);}
+.sb-item i{width:18px;text-align:center;font-size:.95rem;}
+.sb-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:.7rem;font-weight:700;padding:.15rem .5rem;border-radius:20px;}
+.sb-bottom{padding:1.5rem;border-top:1px solid rgba(196,135,42,.15);}
+.sb-user{display:flex;align-items:center;gap:.85rem;margin-bottom:1rem;}
+.sb-avatar{
+  width:42px;height:42px;border-radius:50%;
+  background:linear-gradient(135deg,var(--admin-accent),#7a4e10);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:1rem;color:var(--white);flex-shrink:0;
+}
+.sb-name{font-weight:600;font-size:.9rem;color:var(--cream);}
+.sb-role{font-size:.72rem;color:var(--admin-accent);font-weight:600;}
+.btn-logout{
+  width:100%;padding:.6rem;background:rgba(220,80,80,.1);
+  border:1px solid rgba(220,80,80,.25);color:#ff9090;
+  border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;
+  font-size:.88rem;font-weight:500;transition:background .25s;
+}
+.btn-logout:hover{background:rgba(220,80,80,.2);}
+
+/* ─── MAIN ─── */
+.main{margin-left:260px;flex:1;padding:2rem;}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:2.5rem;}
+.page-title{font-family:'Playfair Display',serif;font-size:1.75rem;font-weight:800;color:var(--white);}
+.page-sub{color:var(--ash);font-size:.9rem;margin-top:.15rem;}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.topbar-btn{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--ash);cursor:pointer;transition:color .2s;position:relative;}
+.notif-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--danger);border-radius:50%;}
+
+/* ─── PANELS ─── */
+.panel{display:none;} .panel.active{display:block;}
+
+/* ─── STATS ─── */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2rem;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.3rem;}
+.stat-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:.85rem;}
+.stat-val{font-family:'Playfair Display',serif;font-size:1.75rem;font-weight:700;color:var(--white);}
+.stat-lbl{color:var(--ash);font-size:.78rem;margin-top:.15rem;}
+.stat-trend{font-size:.75rem;font-weight:600;margin-top:.3rem;}
+.up{color:#5acc7a;} .down{color:#ff7b7b;}
+
+/* ─── CARD ─── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.5rem;margin-bottom:1.5rem;}
+.card-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--white);margin-bottom:1.2rem;display:flex;align-items:center;gap:.65rem;}
+.card-title i{color:var(--admin-accent);}
+
+/* ─── TABLE ─── */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ash);padding:.65rem 1rem;text-align:left;border-bottom:1px solid var(--border);}
+td{padding:.8rem 1rem;font-size:.88rem;color:var(--cream);border-bottom:1px solid rgba(247,242,232,.04);}
+tr:hover td{background:rgba(247,242,232,.025);}
+.badge{padding:.2rem .6rem;border-radius:20px;font-size:.72rem;font-weight:600;}
+.badge-green{background:rgba(92,163,61,.15);color:var(--sprout);}
+.badge-amber{background:rgba(232,160,32,.15);color:var(--harvest);}
+.badge-red{background:rgba(220,80,80,.12);color:#ff7b7b;}
+.badge-blue{background:rgba(80,150,220,.12);color:#7bb8ff;}
+.badge-gold{background:rgba(196,135,42,.2);color:var(--admin-accent);}
+
+/* ─── BTN ─── */
+.btn{padding:.55rem 1.2rem;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:opacity .2s,transform .2s;display:inline-flex;align-items:center;gap:.4rem;}
+.btn:hover{opacity:.88;transform:translateY(-1px);}
+.btn-green{background:linear-gradient(135deg,var(--sprout),var(--moss));color:#fff;}
+.btn-amber{background:linear-gradient(135deg,var(--harvest),#a06010);color:var(--soil);}
+.btn-red{background:rgba(220,80,80,.15);color:#ff7b7b;border:1px solid rgba(220,80,80,.25);}
+.btn-sm{padding:.35rem .9rem;font-size:.78rem;}
+
+/* ─── FGROUP ─── */
+.fgroup{margin-bottom:.9rem;}
+.fgroup label{display:block;font-size:.75rem;font-weight:700;color:var(--ash);margin-bottom:.35rem;letter-spacing:.04em;text-transform:uppercase;}
+.fgroup input,.fgroup select,.fgroup textarea{
+  width:100%;padding:.75rem .95rem;
+  background:rgba(44,26,14,.7);border:1.5px solid var(--border);
+  border-radius:11px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;
+  transition:border-color .25s;
+}
+.fgroup input:focus,.fgroup select:focus,.fgroup textarea:focus{border-color:var(--admin-accent);box-shadow:0 0 0 3px rgba(196,135,42,.1);}
+.fgroup input::placeholder{color:rgba(184,176,160,.35);}
+.fgroup select option{background:var(--bark);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+
+/* ─── MODAL ─── */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);
+  z-index:1000;display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);
+}
+.modal-bg.open{display:flex;}
+.modal{
+  background:#1e1208;border:1px solid rgba(196,135,42,.25);
+  border-radius:20px;padding:2rem;width:90%;max-width:500px;
+  position:relative;
+}
+.modal-close{
+  position:absolute;top:1rem;right:1rem;background:none;border:none;
+  color:var(--ash);cursor:pointer;font-size:1.1rem;
+}
+.modal-close:hover{color:var(--danger);}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--white);margin-bottom:1.5rem;display:flex;align-items:center;gap:.65rem;}
+.modal-title i{color:var(--admin-accent);}
+
+/* ─── ALERT ─── */
+.alert{padding:.85rem 1rem;border-radius:11px;font-size:.86rem;margin-bottom:1rem;display:none;align-items:center;gap:.6rem;}
+.alert.show{display:flex;}
+.alert-success{background:rgba(92,163,61,.12);border:1px solid rgba(92,163,61,.3);color:var(--sprout);}
+.alert-error{background:rgba(220,80,80,.12);border:1px solid rgba(220,80,80,.3);color:#ff7b7b;}
+.alert-info{background:rgba(80,150,220,.1);border:1px solid rgba(80,150,220,.25);color:#7bb8ff;}
+
+/* ─── TOAST ─── */
+#toast{
+  position:fixed;bottom:2rem;right:2rem;z-index:9999;
+  background:var(--moss);color:var(--white);
+  padding:1rem 1.5rem;border-radius:14px;font-size:.88rem;font-weight:500;
+  box-shadow:0 8px 30px rgba(0,0,0,.4);
+  transform:translateX(150%);transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+  display:flex;align-items:center;gap:.75rem;
+}
+#toast.show{transform:translateX(0);}
+#toast.terror{background:#8b1a1a;}
+
+/* ─── CONFIRM ─── */
+.confirm-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:2000;
+  display:none;align-items:center;justify-content:center;
+}
+.confirm-bg.open{display:flex;}
+.confirm-box{background:#1e1208;border:1px solid rgba(220,80,80,.3);border-radius:18px;padding:2rem;width:380px;text-align:center;}
+.confirm-box h3{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--white);margin-bottom:.75rem;}
+.confirm-box p{color:var(--ash);font-size:.9rem;margin-bottom:1.5rem;}
+.confirm-actions{display:flex;gap:.75rem;justify-content:center;}
+
+/* ─── SEARCH BAR ─── */
+.search-bar{
+  display:flex;gap:1rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center;
+}
+.search-input{
+  flex:1;min-width:200px;padding:.6rem 1rem;
+  background:rgba(44,26,14,.6);border:1px solid var(--border);
+  border-radius:10px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;
+}
+.search-input:focus{border-color:var(--admin-accent);}
+
+/* ─── CHART PLACEHOLDER ─── */
+.chart-area{
+  height:180px;background:rgba(44,26,14,.4);border-radius:12px;
+  display:flex;align-items:flex-end;padding:1rem;gap:.4rem;overflow:hidden;
+}
+.chart-bar{
+  flex:1;border-radius:4px 4px 0 0;min-width:20px;
+  background:linear-gradient(to top,var(--admin-accent),var(--harvest));
+  transition:height .5s ease;
+}
+
+@media(max-width:1100px){.stats-row{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;padding:1rem;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .form-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div id="toast"><i class="fas fa-check-circle"></i><span id="toast-msg"></span></div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-bg" id="confirm-bg">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Are you sure?</h3>
+    <p id="confirm-msg">This action cannot be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-red" id="confirm-yes"><i class="fas fa-trash"></i> Confirm</button>
+      <button class="btn" style="background:var(--card);color:var(--ash);" onclick="closeConfirm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="modal-deposit">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-deposit')"><i class="fas fa-times"></i></button>
+    <div class="modal-title"><i class="fas fa-plus-circle"></i> Manual Deposit</div>
+    <div class="alert" id="md-alert"><i class="fas fa-info-circle"></i><span></span></div>
+    <div class="fgroup"><label>User (search)</label><input type="text" id="md-user-search" placeholder="Type name or email…" oninput="searchUsersForModal(this.value)"/></div>
+    <div id="md-user-results" style="margin-bottom:.9rem;"></div>
+    <input type="hidden" id="md-user-id"/>
+    <div class="form-row">
+      <div class="fgroup"><label>Amount (KES)</label><input type="number" id="md-amount" placeholder="e.g. 10000" min="1"/></div>
+      <div class="fgroup"><label>Method</label>
+        <select id="md-method"><option value="manual">Manual (Admin)</option><option value="mpesa">M-Pesa Reversal</option><option value="bank">Bank Credit</option></select>
+      </div>
+    </div>
+    <div class="fgroup"><label>Admin Note (required)</label><input type="text" id="md-note" placeholder="Reason for manual deposit…"/></div>
+    <div style="display:flex;gap:.75rem;margin-top:.5rem;">
+      <button class="btn btn-green" style="flex:1;" onclick="adminDeposit()"><i class="fas fa-check"></i> Confirm Deposit</button>
+      <button class="btn" style="background:var(--card);color:var(--ash);" onclick="closeModal('modal-deposit')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-add-user">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-user')"><i class="fas fa-times"></i></button>
+    <div class="modal-title"><i class="fas fa-user-plus"></i> Add New User</div>
+    <div class="alert" id="au-alert"><i class="fas fa-info-circle"></i><span></span></div>
+    <div class="form-row">
+      <div class="fgroup"><label>Full Name</label><input type="text" id="au-name" placeholder="John Kamau"/></div>
+      <div class="fgroup"><label>Role</label>
+        <select id="au-role"><option value="user">Farmer (User)</option><option value="admin">Admin</option></select>
+      </div>
+    </div>
+    <div class="fgroup"><label>Email</label><input type="email" id="au-email" placeholder="user@example.com"/></div>
+    <div class="form-row">
+      <div class="fgroup"><label>Phone</label><input type="tel" id="au-phone" placeholder="+254712345678"/></div>
+      <div class="fgroup"><label>Location</label><input type="text" id="au-location" placeholder="Nakuru"/></div>
+    </div>
+    <div class="fgroup">
+      <label>Temporary Password</label>
+      <input type="password" id="au-pass" placeholder="Min 8 chars"/>
+    </div>
+    <div style="background:rgba(196,135,42,.08);border:1px solid rgba(196,135,42,.2);border-radius:10px;padding:.75rem;font-size:.8rem;color:var(--ash);margin-bottom:1rem;">
+      <i class="fas fa-shield-alt" style="color:var(--admin-accent)"></i> Password will be hashed with bcrypt(12) before storing — never plain text.
+    </div>
+    <div style="display:flex;gap:.75rem;">
+      <button class="btn btn-amber" style="flex:1;" onclick="addUser()"><i class="fas fa-user-plus"></i> Create User</button>
+      <button class="btn" style="background:var(--card);color:var(--ash);" onclick="closeModal('modal-add-user')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo"><i class="fas fa-seedling"></i> AgroNexus <span class="admin-badge">Admin</span></div>
+  <nav class="sb-menu">
+    <div class="sb-section">Overview</div>
+    <div class="sb-item active" onclick="nav('overview')"><i class="fas fa-chart-pie"></i> Overview</div>
+    <div class="sb-item" onclick="nav('users')"><i class="fas fa-users"></i> User Management</div>
+    <div class="sb-item" onclick="nav('transactions')"><i class="fas fa-exchange-alt"></i> All Transactions</div>
+    <div class="sb-item" onclick="nav('deposits')"><i class="fas fa-plus-circle"></i> Manual Deposits</div>
+
+    <div class="sb-section">Platform</div>
+    <div class="sb-item" onclick="nav('market')"><i class="fas fa-store"></i> Marketplace</div>
+    <div class="sb-item" onclick="nav('content')"><i class="fas fa-book-open"></i> Content/Courses</div>
+    <div class="sb-item" onclick="nav('community')"><i class="fas fa-comments"></i> Community</div>
+
+    <div class="sb-section">System</div>
+    <div class="sb-item" onclick="nav('security')"><i class="fas fa-shield-alt"></i> Security Logs <span class="sb-badge">!</span></div>
+    <div class="sb-item" onclick="nav('settings')"><i class="fas fa-cog"></i> System Settings</div>
+    <div class="sb-item" onclick="nav('audit')"><i class="fas fa-file-alt"></i> Audit Trail</div>
+  </nav>
+  <div class="sb-bottom">
+    <div class="sb-user">
+      <div class="sb-avatar" id="sb-av">AD</div>
+      <div><div class="sb-name" id="sb-name">Admin</div><div class="sb-role">🛡️ Super Admin</div></div>
+    </div>
+    <button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- ── OVERVIEW ── -->
+  <div class="panel active" id="p-overview">
+    <div class="topbar">
+      <div><div class="page-title">Admin Overview</div><div class="page-sub" id="admin-date">Loading…</div></div>
+      <div class="topbar-right">
+        <div class="topbar-btn" onclick="nav('security')"><i class="fas fa-bell"></i><div class="notif-dot"></div></div>
+        <button class="btn btn-amber" onclick="openModal('modal-deposit')"><i class="fas fa-plus-circle"></i> Manual Deposit</button>
+        <button class="btn btn-green" onclick="openModal('modal-add-user')"><i class="fas fa-user-plus"></i> Add User</button>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(92,163,61,.15);color:var(--sprout)"><i class="fas fa-users"></i></div>
+        <div class="stat-val" id="ov-users">—</div><div class="stat-lbl">Total Users</div>
+        <div class="stat-trend up" id="ov-users-t">Loading…</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(232,160,32,.15);color:var(--harvest)"><i class="fas fa-wallet"></i></div>
+        <div class="stat-val" id="ov-balance">—</div><div class="stat-lbl">Platform Balance</div>
+        <div class="stat-trend up" id="ov-balance-t">Loading…</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(196,135,42,.15);color:var(--admin-accent)"><i class="fas fa-arrow-down"></i></div>
+        <div class="stat-val" id="ov-deps">—</div><div class="stat-lbl">Total Deposits</div>
+        <div class="stat-trend up">This month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(220,80,80,.12);color:#ff9090"><i class="fas fa-arrow-up"></i></div>
+        <div class="stat-val" id="ov-wds">—</div><div class="stat-lbl">Total Withdrawals</div>
+        <div class="stat-trend down">This month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(80,150,220,.12);color:#7bb8ff"><i class="fas fa-store"></i></div>
+        <div class="stat-val" id="ov-trades">—</div><div class="stat-lbl">Marketplace Trades</div>
+        <div class="stat-trend up">This week</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;">
+      <div class="card">
+        <div class="card-title"><i class="fas fa-chart-bar"></i> Monthly Revenue (KES)</div>
+        <div class="chart-area" id="revenue-chart"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:.5rem;font-size:.75rem;color:var(--ash);" id="chart-labels"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-exclamation-triangle"></i> System Alerts</div>
+        <div id="sys-alerts"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="fas fa-clock"></i> Recent Activity</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>User</th><th>Action</th><th>Amount</th><th>Time</th><th>Status</th></tr></thead>
+          <tbody id="recent-activity"><tr><td colspan="5" style="color:var(--ash);text-align:center;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── USERS ── -->
+  <div class="panel" id="p-users">
+    <div class="topbar">
+      <div><div class="page-title">User Management</div><div class="page-sub">View, edit, suspend & delete users</div></div>
+      <button class="btn btn-green" onclick="openModal('modal-add-user')"><i class="fas fa-user-plus"></i> Add User</button>
+    </div>
+    <div class="card">
+      <div class="search-bar">
+        <input type="text" class="search-input" id="user-search" placeholder="Search by name, email, phone…" oninput="loadUsers()"/>
+        <select id="user-role-filter" style="padding:.6rem 1rem;background:rgba(44,26,14,.6);border:1px solid var(--border);border-radius:10px;color:var(--cream);font-family:'DM Sans',sans-serif;" onchange="loadUsers()">
+          <option value="">All Roles</option><option value="user">Farmers</option><option value="admin">Admins</option>
+        </select>
+        <select id="user-status-filter" style="padding:.6rem 1rem;background:rgba(44,26,14,.6);border:1px solid var(--border);border-radius:10px;color:var(--cream);font-family:'DM Sans',sans-serif;" onchange="loadUsers()">
+          <option value="">All Statuses</option><option value="active">Active</option><option value="suspended">Suspended</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Balance</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="users-body"><tr><td colspan="7" style="color:var(--ash);text-align:center;padding:2rem;">Loading users…</td></tr></tbody>
+        </table>
+      </div>
+      <div id="users-pagination" style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem;"></div>
+    </div>
+  </div>
+
+  <!-- ── TRANSACTIONS ── -->
+  <div class="panel" id="p-transactions">
+    <div class="topbar">
+      <div><div class="page-title">All Transactions</div><div class="page-sub">Full platform transaction history</div></div>
+    </div>
+    <div class="card">
+      <div class="search-bar">
+        <input type="text" class="search-input" id="tx-search" placeholder="Search by user, reference…" oninput="loadAllTx()"/>
+        <select id="tx-type-f" style="padding:.6rem 1rem;background:rgba(44,26,14,.6);border:1px solid var(--border);border-radius:10px;color:var(--cream);font-family:'DM Sans',sans-serif;" onchange="loadAllTx()">
+          <option value="">All Types</option><option value="deposit">Deposits</option><option value="withdrawal">Withdrawals</option>
+        </select>
+        <select id="tx-status-f" style="padding:.6rem 1rem;background:rgba(44,26,14,.6);border:1px solid var(--border);border-radius:10px;color:var(--cream);font-family:'DM Sans',sans-serif;" onchange="loadAllTx()">
+          <option value="">All Statuses</option><option value="completed">Completed</option><option value="pending">Pending</option><option value="failed">Failed</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>User</th><th>Type</th><th>Amount</th><th>Method</th><th>Reference</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="all-tx-body"><tr><td colspan="8" style="color:var(--ash);text-align:center;padding:2rem;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MANUAL DEPOSITS ── -->
+  <div class="panel" id="p-deposits">
+    <div class="topbar">
+      <div><div class="page-title">Manual Deposits</div><div class="page-sub">Admin-initiated fund crediting</div></div>
+      <button class="btn btn-amber" onclick="openModal('modal-deposit')"><i class="fas fa-plus-circle"></i> New Deposit</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <div class="card">
+        <div class="card-title"><i class="fas fa-info-circle"></i> Manual Deposit Guidelines</div>
+        <div style="font-size:.88rem;color:var(--ash);line-height:1.8;">
+          <div style="padding:.6rem 0;border-bottom:1px solid var(--border);">✅ All manual deposits are logged with your admin ID, timestamp, and reason</div>
+          <div style="padding:.6rem 0;border-bottom:1px solid var(--border);">✅ Users receive an in-app notification upon deposit</div>
+          <div style="padding:.6rem 0;border-bottom:1px solid var(--border);">✅ All deposits require a mandatory admin note</div>
+          <div style="padding:.6rem 0;border-bottom:1px solid var(--border);">⚠️ Manual deposits are irreversible — double check amounts</div>
+          <div style="padding:.6rem 0;">⚠️ Deposits above KES 100,000 require 2 admin approvals</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-history"></i> Recent Manual Deposits</div>
+        <div id="manual-dep-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECURITY LOGS ── -->
+  <div class="panel" id="p-security">
+    <div class="topbar">
+      <div><div class="page-title">Security Center</div><div class="page-sub">Logs, threats & access control</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+      <div class="card">
+        <div class="card-title"><i class="fas fa-exclamation-circle"></i> Security Alerts</div>
+        <div id="sec-alerts-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-tachometer-alt"></i> System Health</div>
+        <div id="system-health"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fas fa-list"></i> Security Audit Log</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Timestamp</th><th>Event</th><th>User/IP</th><th>Severity</th><th>Details</th></tr></thead>
+          <tbody id="sec-log-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── AUDIT TRAIL ── -->
+  <div class="panel" id="p-audit">
+    <div class="topbar">
+      <div><div class="page-title">Audit Trail</div><div class="page-sub">Complete admin action history</div></div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Timestamp</th><th>Admin</th><th>Action</th><th>Target</th><th>IP Address</th><th>Result</th></tr></thead>
+          <tbody id="audit-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="panel" id="p-settings">
+    <div class="topbar">
+      <div><div class="page-title">System Settings</div><div class="page-sub">Platform configuration</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <div class="card">
+        <div class="card-title"><i class="fas fa-sliders-h"></i> Platform Settings</div>
+        <div class="fgroup"><label>Platform Name</label><input type="text" value="AgroNexus" id="set-platform-name"/></div>
+        <div class="fgroup"><label>Min Deposit (KES)</label><input type="number" value="50" id="set-min-dep"/></div>
+        <div class="fgroup"><label>Min Withdrawal (KES)</label><input type="number" value="100" id="set-min-wd"/></div>
+        <div class="fgroup"><label>Withdrawal Fee (%)</label><input type="number" value="1.5" step="0.1" id="set-wd-fee"/></div>
+        <div class="fgroup"><label>Maintenance Mode</label>
+          <select id="set-maint"><option value="off">Off — Platform Live</option><option value="on">On — Maintenance</option></select>
+        </div>
+        <button class="btn btn-amber" onclick="saveSettings()"><i class="fas fa-save"></i> Save Settings</button>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-key"></i> Security Settings</div>
+        <div class="fgroup"><label>Max Login Attempts</label><input type="number" value="5" id="set-max-attempts"/></div>
+        <div class="fgroup"><label>Session Duration (mins)</label><input type="number" value="60" id="set-session"/></div>
+        <div class="fgroup"><label>JWT Access Token Expiry</label><input type="text" value="15m" id="set-jwt"/></div>
+        <div class="fgroup"><label>Require 2FA for Admins</label>
+          <select id="set-2fa"><option value="yes">Yes (Recommended)</option><option value="no">No</option></select>
+        </div>
+        <div style="background:rgba(196,135,42,.08);border:1px solid rgba(196,135,42,.2);border-radius:10px;padding:.85rem;font-size:.8rem;color:var(--ash);margin-bottom:1rem;">
+          <i class="fas fa-shield-alt" style="color:var(--admin-accent);"></i>
+          <strong style="color:var(--cream)"> Security Best Practices Active:</strong><br/>
+          bcrypt(12) password hashing · RS256 JWT · Helmet.js · Rate limiting · Input sanitization · MongoDB Atlas TLS
+        </div>
+        <button class="btn btn-amber" onclick="saveSecuritySettings()"><i class="fas fa-shield-alt"></i> Update Security</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OTHER PANELS (placeholder) -->
+  <div class="panel" id="p-market"><div class="topbar"><div><div class="page-title">Marketplace Management</div></div></div><div class="card" id="market-mgmt-content"></div></div>
+  <div class="panel" id="p-content"><div class="topbar"><div><div class="page-title">Content & Courses</div></div></div><div class="card" id="content-mgmt"></div></div>
+  <div class="panel" id="p-community"><div class="topbar"><div><div class="page-title">Community Management</div></div></div><div class="card" id="community-mgmt"></div></div>
+
+</main>
+
+<script>
+/* ─── CONFIG ─── */
+const API='https://your-vercel-app.vercel.app/api';
+let _token=window._authToken||null, _admin=null;
+
+/* ─── AUTH GUARD ─── */
+async function init(){
+  if(!_token){
+    try{
+      const r=await fetch(`${API}/auth/refresh`,{method:'POST',credentials:'include'});
+      if(!r.ok){window.location.href='index.html';return;}
+      const d=await r.json();
+      if(d.user.role!=='admin'){window.location.href='user.html';return;}
+      _token=d.accessToken;_admin=d.user;
+    }catch(e){window.location.href='index.html';return;}
+  }
+  if(!_admin){
+    try{const r=await authFetch('/users/me');_admin=await r.json();}catch{}
+  }
+  if(_admin&&_admin.role!=='admin'){window.location.href='user.html';return;}
+  populateAdmin();
+  document.getElementById('admin-date').textContent=new Date().toLocaleDateString('en-KE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  loadOverview();
+}
+
+function authFetch(path,opts={}){
+  return fetch(API+path,{...opts,credentials:'include',headers:{'Content-Type':'application/json','Authorization':`Bearer ${_token}`,...(opts.headers||{})}});
+}
+
+function populateAdmin(){
+  if(!_admin)return;
+  const n=_admin.name||'Admin';
+  document.getElementById('sb-name').textContent=n;
+  document.getElementById('sb-av').textContent=n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+
+/* ─── NAV ─── */
+function nav(page){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('p-'+page).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(i=>{if(i.getAttribute('onclick')===`nav('${page}')`)i.classList.add('active');});
+  if(page==='users')loadUsers();
+  if(page==='transactions')loadAllTx();
+  if(page==='deposits')loadManualDeps();
+  if(page==='security')loadSecurityPanel();
+  if(page==='audit')loadAudit();
+  if(page==='market')loadMarketMgmt();
+  if(page==='content')loadContentMgmt();
+}
+
+/* ─── TOAST ─── */
+function toast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.className=(type==='error'?'terror':'');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+function setAlert(id,msg,type='success'){
+  const el=document.getElementById(id);
+  el.querySelector('span').textContent=msg;
+  el.className=`alert alert-${type} show`;
+  setTimeout(()=>el.classList.remove('show'),5000);
+}
+
+/* ─── MODAL ─── */
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+/* ─── CONFIRM ─── */
+let _confirmCb=null;
+function confirm(title,msg,cb){
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-msg').textContent=msg;
+  _confirmCb=cb;
+  document.getElementById('confirm-bg').classList.add('open');
+  document.getElementById('confirm-yes').onclick=()=>{cb();closeConfirm();};
+}
+function closeConfirm(){document.getElementById('confirm-bg').classList.remove('open');}
+
+/* ─── OVERVIEW ─── */
+async function loadOverview(){
+  try{
+    const r=await authFetch('/admin/stats');
+    if(!r.ok)return;
+    const d=await r.json();
+    document.getElementById('ov-users').textContent=d.totalUsers||0;
+    document.getElementById('ov-balance').textContent=`KES ${(d.totalBalance||0).toLocaleString()}`;
+    document.getElementById('ov-deps').textContent=`KES ${(d.totalDeposits||0).toLocaleString()}`;
+    document.getElementById('ov-wds').textContent=`KES ${(d.totalWithdrawals||0).toLocaleString()}`;
+    document.getElementById('ov-trades').textContent=d.totalTrades||0;
+    document.getElementById('ov-users-t').textContent=`+${d.newUsersThisMonth||0} this month`;
+
+    // Chart
+    const months=d.monthlyRevenue||[12000,18000,24000,32000,28000,41000,38000,52000,47000,61000,58000,72000];
+    const labels=d.monthLabels||['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const max=Math.max(...months);
+    document.getElementById('revenue-chart').innerHTML=months.map(v=>`
+      <div class="chart-bar" style="height:${Math.max(8,(v/max)*100)}%;position:relative;" title="KES ${v.toLocaleString()}">
+        <div style="position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);font-size:.65rem;color:var(--ash);white-space:nowrap;display:none;" class="chart-tip">KES ${v.toLocaleString()}</div>
+      </div>`).join('');
+    document.getElementById('chart-labels').innerHTML=labels.map(l=>`<span>${l}</span>`).join('');
+
+    // System alerts
+    const alerts=d.systemAlerts||[
+      {level:'warning',msg:'3 pending withdrawal requests awaiting review'},
+      {level:'info',msg:'Database backup completed successfully'},
+      {level:'success',msg:'All services operational — 99.9% uptime'},
+    ];
+    document.getElementById('sys-alerts').innerHTML=alerts.map(a=>`
+      <div style="padding:.8rem;background:rgba(${a.level==='warning'?'232,160,32':a.level==='info'?'80,150,220':'92,163,61'},.08);border:1px solid rgba(${a.level==='warning'?'232,160,32':a.level==='info'?'80,150,220':'92,163,61'},.2);border-radius:11px;margin-bottom:.65rem;font-size:.85rem;color:var(--cream);">
+        <i class="fas fa-${a.level==='warning'?'exclamation-triangle':a.level==='info'?'info-circle':'check-circle'}" style="color:${a.level==='warning'?'var(--harvest)':a.level==='info'?'#7bb8ff':'var(--sprout)'}"></i> ${a.msg}
+      </div>`).join('');
+
+    // Recent activity
+    const acts=d.recentActivity||[];
+    const tbody=document.getElementById('recent-activity');
+    if(acts.length===0){tbody.innerHTML='<tr><td colspan="5" style="color:var(--ash);text-align:center;">No recent activity</td></tr>';return;}
+    tbody.innerHTML=acts.map(a=>`
+      <tr>
+        <td style="font-size:.82rem;">${a.userName||'—'}</td>
+        <td><span class="badge ${a.type==='deposit'?'badge-green':a.type==='withdrawal'?'badge-red':a.type==='admin'?'badge-gold':'badge-blue'}">${a.type}</span></td>
+        <td style="font-weight:600;color:${a.type==='deposit'?'var(--sprout)':'#ff9090'}">KES ${(a.amount||0).toLocaleString()}</td>
+        <td style="font-size:.8rem;color:var(--ash);">${new Date(a.createdAt).toLocaleString('en-KE')}</td>
+        <td><span class="badge ${a.status==='completed'?'badge-green':a.status==='pending'?'badge-amber':'badge-red'}">${a.status}</span></td>
+      </tr>`).join('');
+  }catch(e){console.error(e);}
+}
+
+/* ─── USERS ─── */
+let userPage=1;
+async function loadUsers(){
+  const search=document.getElementById('user-search').value;
+  const role=document.getElementById('user-role-filter').value;
+  const status=document.getElementById('user-status-filter').value;
+  const tbody=document.getElementById('users-body');
+  tbody.innerHTML='<tr><td colspan="7" style="color:var(--ash);text-align:center;">Loading…</td></tr>';
+  try{
+    const params=new URLSearchParams({page:userPage,limit:20});
+    if(search)params.set('search',search);
+    if(role)params.set('role',role);
+    if(status)params.set('status',status);
+    const r=await authFetch(`/admin/users?${params}`);
+    const d=await r.json();
+    const users=d.users||[];
+    if(users.length===0){tbody.innerHTML='<tr><td colspan="7" style="color:var(--ash);text-align:center;padding:2rem;">No users found</td></tr>';return;}
+    tbody.innerHTML=users.map(u=>`
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:.65rem;">
+            <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--moss),var(--leaf));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;">${(u.name||'U').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+            <div><div style="font-weight:600;font-size:.88rem;">${u.name||'—'}</div><div style="font-size:.75rem;color:var(--ash);">${u.phone||''}</div></div>
+          </div>
+        </td>
+        <td style="font-size:.82rem;">${u.email||'—'}</td>
+        <td><span class="badge ${u.role==='admin'?'badge-gold':'badge-green'}">${u.role==='admin'?'Admin':'Farmer'}</span></td>
+        <td style="font-family:'DM Mono',monospace;font-size:.82rem;font-weight:600;">KES ${(u.walletBalance||0).toLocaleString()}</td>
+        <td style="font-size:.8rem;color:var(--ash);">${new Date(u.createdAt).toLocaleDateString()}</td>
+        <td><span class="badge ${u.isActive!==false?'badge-green':'badge-red'}">${u.isActive!==false?'Active':'Suspended'}</span></td>
+        <td>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+            <button class="btn btn-sm btn-amber" onclick='openDepositFor("${u._id}","${u.name}")'><i class="fas fa-plus"></i> Dep</button>
+            <button class="btn btn-sm" style="background:rgba(80,150,220,.12);color:#7bb8ff;" onclick='viewUser("${u._id}")'><i class="fas fa-eye"></i></button>
+            <button class="btn btn-sm ${u.isActive!==false?'btn-red':''}" style="${u.isActive!==false?'':'background:rgba(92,163,61,.15);color:var(--sprout);'}" onclick='toggleUser("${u._id}","${u.name}",${u.isActive!==false})'><i class="fas fa-${u.isActive!==false?'ban':'check'}"></i></button>
+            <button class="btn btn-sm btn-red" onclick='deleteUser("${u._id}","${u.name}")'><i class="fas fa-trash"></i></button>
+          </div>
+        </td>
+      </tr>`).join('');
+
+    // Pagination
+    const total=d.total||0,pages=Math.ceil(total/20);
+    let pg='';
+    if(pages>1){
+      for(let i=1;i<=pages;i++){
+        pg+=`<button class="btn btn-sm ${i===userPage?'btn-amber':''}" style="${i!==userPage?'background:var(--card);color:var(--ash);':''}" onclick="userPage=${i};loadUsers()">${i}</button>`;
+      }
+    }
+    document.getElementById('users-pagination').innerHTML=pg;
+  }catch(e){tbody.innerHTML=`<tr><td colspan="7" style="color:#ff7b7b;text-align:center;">${e.message}</td></tr>`;}
+}
+
+function openDepositFor(id,name){
+  document.getElementById('md-user-search').value=name;
+  document.getElementById('md-user-id').value=id;
+  document.getElementById('md-user-results').innerHTML=`<div style="padding:.5rem .75rem;background:rgba(92,163,61,.1);border-radius:8px;font-size:.83rem;color:var(--sprout);">✓ Selected: ${name}</div>`;
+  openModal('modal-deposit');
+}
+
+/* ─── USER SEARCH FOR MODAL ─── */
+async function searchUsersForModal(q){
+  if(q.length<2){document.getElementById('md-user-results').innerHTML='';return;}
+  try{
+    const r=await authFetch(`/admin/users?search=${encodeURIComponent(q)}&limit=5`);
+    const d=await r.json();
+    const users=d.users||[];
+    document.getElementById('md-user-results').innerHTML=users.map(u=>`
+      <div style="padding:.5rem .75rem;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:.3rem;cursor:pointer;font-size:.85rem;display:flex;justify-content:space-between;"
+        onclick="selectModalUser('${u._id}','${u.name}')">
+        <span>${u.name}</span><span style="color:var(--ash);">${u.email}</span>
+      </div>`).join('')||'<div style="color:var(--ash);font-size:.82rem;">No users found</div>';
+  }catch{}
+}
+function selectModalUser(id,name){
+  document.getElementById('md-user-id').value=id;
+  document.getElementById('md-user-search').value=name;
+  document.getElementById('md-user-results').innerHTML=`<div style="padding:.5rem .75rem;background:rgba(92,163,61,.1);border-radius:8px;font-size:.83rem;color:var(--sprout);">✓ Selected: ${name}</div>`;
+}
+
+/* ─── ADMIN DEPOSIT ─── */
+async function adminDeposit(){
+  const userId=document.getElementById('md-user-id').value;
+  const amount=parseFloat(document.getElementById('md-amount').value);
+  const method=document.getElementById('md-method').value;
+  const note=document.getElementById('md-note').value.trim();
+  if(!userId){setAlert('md-alert','Select a user first','error');return;}
+  if(!amount||amount<1){setAlert('md-alert','Enter a valid amount','error');return;}
+  if(!note){setAlert('md-alert','Admin note is required for audit trail','error');return;}
+  try{
+    const r=await authFetch('/admin/deposit',{
+      method:'POST',
+      body:JSON.stringify({userId,amount,method,adminNote:note})
+    });
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.message);
+    setAlert('md-alert',`KES ${amount.toLocaleString()} credited to user successfully`,'success');
+    toast(`Manual deposit of KES ${amount.toLocaleString()} done ✅`);
+    loadOverview();
+  }catch(e){setAlert('md-alert',e.message,'error');}
+}
+
+/* ─── ADD USER ─── */
+async function addUser(){
+  const name=document.getElementById('au-name').value.trim();
+  const email=document.getElementById('au-email').value.trim();
+  const phone=document.getElementById('au-phone').value.trim();
+  const location=document.getElementById('au-location').value.trim();
+  const role=document.getElementById('au-role').value;
+  const pass=document.getElementById('au-pass').value;
+  if(!name||!email||!pass){setAlert('au-alert','Name, email and password are required','error');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setAlert('au-alert','Invalid email','error');return;}
+  if(pass.length<8){setAlert('au-alert','Password must be at least 8 characters','error');return;}
+  try{
+    const r=await authFetch('/admin/users',{
+      method:'POST',
+      body:JSON.stringify({name,email,phone,location,role,password:pass})
+    });
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.message);
+    setAlert('au-alert',`User "${name}" created successfully! 🌱`,'success');
+    toast(`User ${name} added!`);
+    loadUsers();
+  }catch(e){setAlert('au-alert',e.message,'error');}
+}
+
+/* ─── TOGGLE USER ─── */
+function toggleUser(id,name,isActive){
+  const action=isActive?'suspend':'activate';
+  confirm(`${action==='suspend'?'Suspend':'Activate'} User`,`Are you sure you want to ${action} "${name}"?`,async()=>{
+    try{
+      const r=await authFetch(`/admin/users/${id}/toggle`,{method:'PUT'});
+      if(!r.ok)throw new Error('Failed');
+      toast(`User ${action}d: ${name}`);
+      loadUsers();
+    }catch(e){toast(e.message,'error');}
+  });
+}
+
+/* ─── DELETE USER ─── */
+function deleteUser(id,name){
+  confirm('Delete User',`Permanently delete "${name}"? This removes all their data.`,async()=>{
+    try{
+      const r=await authFetch(`/admin/users/${id}`,{method:'DELETE'});
+      if(!r.ok)throw new Error('Delete failed');
+      toast(`User "${name}" deleted`);
+      loadUsers();
+    }catch(e){toast(e.message,'error');}
+  });
+}
+
+function viewUser(id){toast('User detail view — coming in next build');}
+
+/* ─── ALL TRANSACTIONS ─── */
+async function loadAllTx(){
+  const search=document.getElementById('tx-search').value;
+  const type=document.getElementById('tx-type-f').value;
+  const status=document.getElementById('tx-status-f').value;
+  const tbody=document.getElementById('all-tx-body');
+  tbody.innerHTML='<tr><td colspan="8" style="color:var(--ash);text-align:center;">Loading…</td></tr>';
+  try{
+    const params=new URLSearchParams({limit:30});
+    if(search)params.set('search',search);
+    if(type)params.set('type',type);
+    if(status)params.set('status',status);
+    const r=await authFetch(`/admin/transactions?${params}`);
+    const d=await r.json();
+    const txs=d.transactions||[];
+    if(txs.length===0){tbody.innerHTML='<tr><td colspan="8" style="color:var(--ash);text-align:center;padding:2rem;">No transactions</td></tr>';return;}
+    tbody.innerHTML=txs.map(t=>`
+      <tr>
+        <td style="font-size:.78rem;font-family:'DM Mono',monospace;">${new Date(t.createdAt).toLocaleString('en-KE')}</td>
+        <td style="font-size:.82rem;">${t.userName||t.userId||'—'}</td>
+        <td><span class="badge ${t.type==='deposit'?'badge-green':t.type==='withdrawal'?'badge-red':t.type==='admin'?'badge-gold':'badge-blue'}">${t.type}</span></td>
+        <td style="font-weight:700;color:${t.type==='deposit'?'var(--sprout)':'#ff9090'}">KES ${t.amount.toLocaleString()}</td>
+        <td style="font-size:.8rem;color:var(--ash);">${t.method||'—'}</td>
+        <td style="font-size:.78rem;font-family:'DM Mono',monospace;color:var(--ash);">${t.reference||t._id?.slice(-8)||'—'}</td>
+        <td><span class="badge ${t.status==='completed'?'badge-green':t.status==='pending'?'badge-amber':'badge-red'}">${t.status}</span></td>
+        <td>
+          ${t.status==='pending'?`<button class="btn btn-sm btn-green" onclick='approveTx("${t._id}")'><i class="fas fa-check"></i></button>
+          <button class="btn btn-sm btn-red" onclick='rejectTx("${t._id}")'><i class="fas fa-times"></i></button>`:'—'}
+        </td>
+      </tr>`).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="8" style="color:#ff7b7b;text-align:center;">${e.message}</td></tr>`;}
+}
+
+async function approveTx(id){
+  try{const r=await authFetch(`/admin/transactions/${id}/approve`,{method:'PUT'});if(!r.ok)throw new Error('Failed');toast('Transaction approved ✅');loadAllTx();}catch(e){toast(e.message,'error');}
+}
+async function rejectTx(id){
+  confirm('Reject Transaction','Reject and reverse this transaction?',async()=>{
+    try{const r=await authFetch(`/admin/transactions/${id}/reject`,{method:'PUT'});if(!r.ok)throw new Error('Failed');toast('Transaction rejected');loadAllTx();}catch(e){toast(e.message,'error');}
+  });
+}
+
+/* ─── MANUAL DEPS LIST ─── */
+async function loadManualDeps(){
+  try{
+    const r=await authFetch('/admin/transactions?type=manual&limit=10');
+    const d=await r.json();
+    const txs=d.transactions||[];
+    document.getElementById('manual-dep-list').innerHTML=txs.length===0
+      ?'<div style="color:var(--ash);font-size:.88rem;">No manual deposits yet</div>'
+      :txs.map(t=>`
+      <div style="padding:.8rem;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;margin-bottom:.2rem;">
+          <strong style="color:var(--white);font-size:.88rem;">${t.userName||'User'}</strong>
+          <span style="font-weight:700;color:var(--sprout);">+KES ${t.amount.toLocaleString()}</span>
+        </div>
+        <div style="font-size:.77rem;color:var(--ash);">${t.adminNote||''} · ${new Date(t.createdAt).toLocaleDateString()}</div>
+      </div>`).join('');
+  }catch{}
+}
+
+/* ─── SECURITY PANEL ─── */
+function loadSecurityPanel(){
+  const alerts=[
+    {level:'high',icon:'fas fa-ban',msg:'5 failed login attempts from IP 197.248.xx.xx (Blocked)'},
+    {level:'medium',icon:'fas fa-user-secret',msg:'Unusual access pattern detected for user ID #4821'},
+    {level:'low',icon:'fas fa-info-circle',msg:'New admin login from Chrome/Windows · Nairobi'},
+  ];
+  document.getElementById('sec-alerts-list').innerHTML=alerts.map(a=>`
+    <div style="display:flex;gap:.75rem;padding:.85rem;background:rgba(${a.level==='high'?'220,80,80':a.level==='medium'?'232,160,32':'80,150,220'},.07);border:1px solid rgba(${a.level==='high'?'220,80,80':a.level==='medium'?'232,160,32':'80,150,220'},.2);border-radius:11px;margin-bottom:.65rem;">
+      <i class="${a.icon}" style="color:${a.level==='high'?'#ff7b7b':a.level==='medium'?'var(--harvest)':'#7bb8ff'};margin-top:.1rem;flex-shrink:0;"></i>
+      <div style="font-size:.85rem;color:var(--cream);">${a.msg}</div>
+    </div>`).join('');
+
+  const health=[
+    {label:'API Response Time',val:'84ms',ok:true},
+    {label:'Database (MongoDB Atlas)',val:'Connected · TLS',ok:true},
+    {label:'JWT Service',val:'Operational',ok:true},
+    {label:'bcrypt Hashing',val:'Cost=12 · Active',ok:true},
+    {label:'Rate Limiting',val:'Active · 5 req/min',ok:true},
+    {label:'SSL Certificate',val:'Valid · 89 days',ok:true},
+  ];
+  document.getElementById('system-health').innerHTML=health.map(h=>`
+    <div style="display:flex;justify-content:space-between;padding:.7rem;border-bottom:1px solid var(--border);font-size:.85rem;">
+      <span style="color:var(--ash);">${h.label}</span>
+      <span style="color:${h.ok?'var(--sprout)':'#ff7b7b'};font-weight:600;">${h.val}</span>
+    </div>`).join('');
+
+  const logs=[
+    {ts:'2025-04-08 09:14',event:'Login Success',user:'admin@agronexus.com',ip:'41.212.xx.xx',sev:'info'},
+    {ts:'2025-04-08 08:52',event:'Login Failed (5×)',user:'unknown@gmail.com',ip:'197.248.xx.xx',sev:'high'},
+    {ts:'2025-04-08 08:30',event:'User Deleted',user:'admin@agronexus.com',ip:'41.212.xx.xx',sev:'warning'},
+    {ts:'2025-04-08 07:11',event:'Manual Deposit',user:'admin@agronexus.com',ip:'41.212.xx.xx',sev:'info'},
+    {ts:'2025-04-07 18:40',event:'Password Changed',user:'farmer@example.com',ip:'197.248.xx.xx',sev:'info'},
+  ];
+  document.getElementById('sec-log-body').innerHTML=logs.map(l=>`
+    <tr>
+      <td style="font-family:'DM Mono',monospace;font-size:.78rem;">${l.ts}</td>
+      <td style="color:var(--cream);">${l.event}</td>
+      <td style="font-size:.82rem;color:var(--ash);">${l.user} · ${l.ip}</td>
+      <td><span class="badge ${l.sev==='high'?'badge-red':l.sev==='warning'?'badge-amber':'badge-blue'}">${l.sev}</span></td>
+      <td style="font-size:.78rem;color:var(--ash);">View Details</td>
+    </tr>`).join('');
+}
+
+/* ─── AUDIT ─── */
+async function loadAudit(){
+  const entries=[
+    {ts:'2025-04-08 09:30',admin:'Super Admin',action:'Created User',target:'James Mwangi',ip:'41.212.xx.xx',result:'Success'},
+    {ts:'2025-04-08 09:12',admin:'Super Admin',action:'Manual Deposit',target:'Farmer #4821 · KES 5,000',ip:'41.212.xx.xx',result:'Success'},
+    {ts:'2025-04-08 08:50',admin:'Super Admin',action:'Deleted User',target:'test@spam.com',ip:'41.212.xx.xx',result:'Success'},
+    {ts:'2025-04-07 15:22',admin:'Super Admin',action:'Approved Withdrawal',target:'Tx #8821 · KES 2,500',ip:'41.212.xx.xx',result:'Success'},
+    {ts:'2025-04-07 11:05',admin:'Super Admin',action:'Updated Settings',target:'Min Deposit → 50',ip:'41.212.xx.xx',result:'Success'},
+  ];
+  document.getElementById('audit-body').innerHTML=entries.map(e=>`
+    <tr>
+      <td style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--ash);">${e.ts}</td>
+      <td><span class="badge badge-gold">${e.admin}</span></td>
+      <td style="color:var(--cream);">${e.action}</td>
+      <td style="font-size:.82rem;color:var(--ash);">${e.target}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--ash);">${e.ip}</td>
+      <td><span class="badge badge-green">${e.result}</span></td>
+    </tr>`).join('');
+}
+
+/* ─── MARKET MGMT ─── */
+function loadMarketMgmt(){
+  document.getElementById('market-mgmt-content').innerHTML=`
+    <div class="card-title"><i class="fas fa-store"></i> Marketplace Listings</div>
+    <p style="color:var(--ash);font-size:.9rem;">Manage, approve and remove marketplace listings. Connect to your backend for live data.</p>
+    <div style="margin-top:1rem;display:flex;gap:.75rem;">
+      <button class="btn btn-green" onclick="toast('Listings refreshed')"><i class="fas fa-sync"></i> Refresh</button>
+      <button class="btn btn-red" onclick="toast('Bulk action — select items first')"><i class="fas fa-trash"></i> Remove Selected</button>
+    </div>`;
+}
+
+function loadContentMgmt(){
+  document.getElementById('content-mgmt').innerHTML=`
+    <div class="card-title"><i class="fas fa-book-open"></i> Course Management</div>
+    <p style="color:var(--ash);font-size:.9rem;">Add, edit and remove learning courses and resources.</p>
+    <button class="btn btn-amber" style="margin-top:1rem;" onclick="toast('Course builder — coming soon')"><i class="fas fa-plus"></i> Add Course</button>`;
+}
+
+/* ─── SETTINGS SAVE ─── */
+async function saveSettings(){
+  try{
+    const r=await authFetch('/admin/settings',{
+      method:'PUT',
+      body:JSON.stringify({
+        platformName:document.getElementById('set-platform-name').value,
+        minDeposit:parseFloat(document.getElementById('set-min-dep').value),
+        minWithdrawal:parseFloat(document.getElementById('set-min-wd').value),
+        withdrawalFee:parseFloat(document.getElementById('set-wd-fee').value),
+        maintenanceMode:document.getElementById('set-maint').value==='on'
+      })
+    });
+    if(!r.ok)throw new Error('Save failed');
+    toast('Settings saved ✅');
+  }catch(e){toast(e.message,'error');}
+}
+
+async function saveSecuritySettings(){
+  try{
+    const r=await authFetch('/admin/settings/security',{
+      method:'PUT',
+      body:JSON.stringify({
+        maxLoginAttempts:parseInt(document.getElementById('set-max-attempts').value),
+        sessionDuration:parseInt(document.getElementById('set-session').value),
+        jwtExpiry:document.getElementById('set-jwt').value,
+        require2FA:document.getElementById('set-2fa').value==='yes'
+      })
+    });
+    if(!r.ok)throw new Error('Failed');
+    toast('Security settings updated 🔒');
+  }catch(e){toast(e.message,'error');}
+}
+
+/* ─── LOGOUT ─── */
+async function doLogout(){
+  try{await fetch(`${API}/auth/logout`,{method:'POST',credentials:'include'});}catch{}
+  _token=null;window._authToken=null;
+  window.location.href='index.html';
+}
+
+/* ─── INIT ─── */
+init();
+</script>
+</body>
+</html>

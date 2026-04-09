@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgroNexus — Smart Farming Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+:root {
+  --soil: #2C1A0E;
+  --bark: #4A2C17;
+  --moss: #3D5A2C;
+  --leaf: #5A8C3D;
+  --sprout: #7CB855;
+  --harvest: #E8A020;
+  --sun: #F5C842;
+  --cream: #F7F2E8;
+  --fog: #EAE4D6;
+  --ash: #B8B0A0;
+  --white: #FDFAF4;
+  --shadow: rgba(44,26,14,0.15);
+  --glow: rgba(92,163,61,0.25);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--soil);
+  color:var(--cream);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ─── NOISE TEXTURE OVERLAY ─── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:.4;
+}
+
+/* ─── NAV ─── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.2rem 4rem;
+  background:rgba(44,26,14,.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(92,163,61,.2);
+}
+.logo{
+  display:flex;align-items:center;gap:.75rem;
+  font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;
+  color:var(--sprout);letter-spacing:-.03em;
+}
+.logo i{color:var(--harvest);font-size:1.4rem;}
+.nav-links{display:flex;gap:2rem;align-items:center;}
+.nav-links a{
+  color:var(--ash);text-decoration:none;font-size:.9rem;font-weight:500;
+  transition:color .3s;letter-spacing:.02em;
+}
+.nav-links a:hover{color:var(--sprout);}
+.nav-cta{
+  background:var(--sprout);color:var(--soil)!important;
+  padding:.55rem 1.4rem;border-radius:50px;font-weight:600!important;
+  transition:background .3s,transform .2s!important;
+}
+.nav-cta:hover{background:var(--sun)!important;transform:translateY(-1px)!important;}
+
+/* ─── HERO ─── */
+.hero{
+  min-height:100vh;
+  display:grid;grid-template-columns:1fr 1fr;
+  align-items:center;
+  padding:8rem 4rem 4rem;
+  position:relative;
+  gap:4rem;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 70% 60% at 30% 50%, rgba(61,90,44,.35) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 20%, rgba(232,160,32,.12) 0%, transparent 60%),
+    linear-gradient(160deg, var(--soil) 0%, #1a0e06 100%);
+  z-index:-1;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:rgba(92,163,61,.15);border:1px solid rgba(92,163,61,.3);
+  color:var(--sprout);padding:.4rem 1rem;border-radius:50px;
+  font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:1.5rem;
+}
+.hero-badge span{
+  width:6px;height:6px;background:var(--sprout);border-radius:50%;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.5)}}
+.hero h1{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2.8rem,5vw,5rem);
+  font-weight:900;line-height:1.05;
+  color:var(--white);
+  margin-bottom:1.5rem;
+}
+.hero h1 em{color:var(--sprout);font-style:normal;}
+.hero p{
+  color:var(--ash);font-size:1.1rem;line-height:1.7;
+  margin-bottom:2.5rem;max-width:480px;
+}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;}
+.btn-primary{
+  background:linear-gradient(135deg,var(--sprout),var(--moss));
+  color:var(--white);border:none;padding:.85rem 2rem;
+  border-radius:50px;font-size:1rem;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:.5rem;
+  transition:transform .25s,box-shadow .25s;
+  box-shadow:0 4px 20px rgba(92,163,61,.35);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(92,163,61,.5);}
+.btn-outline{
+  background:transparent;color:var(--cream);
+  border:1.5px solid rgba(247,242,232,.3);
+  padding:.85rem 2rem;border-radius:50px;font-size:1rem;font-weight:500;
+  cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;
+  transition:border-color .25s,color .25s;
+}
+.btn-outline:hover{border-color:var(--sprout);color:var(--sprout);}
+
+/* ─── STATS STRIP ─── */
+.hero-stats{
+  display:flex;gap:2.5rem;margin-top:3rem;
+  padding-top:2rem;border-top:1px solid rgba(247,242,232,.1);
+}
+.stat{text-align:left;}
+.stat-num{
+  font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;
+  color:var(--harvest);
+}
+.stat-lbl{color:var(--ash);font-size:.8rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;}
+
+/* ─── AUTH CARD (right side of hero) ─── */
+.auth-card{
+  background:rgba(247,242,232,.04);
+  border:1px solid rgba(247,242,232,.1);
+  border-radius:24px;
+  padding:2.5rem;
+  backdrop-filter:blur(30px);
+  position:relative;
+  overflow:hidden;
+}
+.auth-card::before{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:200px;height:200px;
+  background:radial-gradient(var(--glow), transparent 70%);
+  pointer-events:none;
+}
+.auth-tabs{display:flex;gap:0;margin-bottom:2rem;background:rgba(44,26,14,.5);border-radius:12px;padding:4px;}
+.tab-btn{
+  flex:1;padding:.6rem;border:none;background:none;
+  color:var(--ash);font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:500;
+  cursor:pointer;border-radius:10px;transition:all .25s;
+}
+.tab-btn.active{background:var(--moss);color:var(--white);}
+.form-group{margin-bottom:1.2rem;position:relative;}
+.form-group label{
+  display:block;font-size:.8rem;font-weight:600;
+  color:var(--ash);margin-bottom:.45rem;letter-spacing:.04em;text-transform:uppercase;
+}
+.form-group input,.form-group select{
+  width:100%;padding:.85rem 1rem .85rem 2.8rem;
+  background:rgba(44,26,14,.6);
+  border:1.5px solid rgba(247,242,232,.12);
+  border-radius:12px;color:var(--white);
+  font-family:'DM Sans',sans-serif;font-size:.95rem;
+  transition:border-color .25s,box-shadow .25s;
+  outline:none;
+}
+.form-group input:focus,.form-group select:focus{
+  border-color:var(--sprout);
+  box-shadow:0 0 0 3px rgba(92,163,61,.15);
+}
+.form-group input::placeholder{color:rgba(184,176,160,.5);}
+.form-group .icon{
+  position:absolute;left:.9rem;bottom:.9rem;
+  color:var(--ash);font-size:.9rem;pointer-events:none;
+}
+.form-group select option{background:var(--bark);}
+.btn-submit{
+  width:100%;padding:.9rem;
+  background:linear-gradient(135deg,var(--harvest),#c47a10);
+  border:none;border-radius:12px;
+  color:var(--soil);font-family:'DM Sans',sans-serif;
+  font-size:1rem;font-weight:700;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+  margin-top:.5rem;letter-spacing:.02em;
+}
+.btn-submit:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(232,160,32,.4);}
+.form-footer{
+  text-align:center;margin-top:1.2rem;
+  color:var(--ash);font-size:.85rem;
+}
+.form-footer a{color:var(--sprout);text-decoration:none;font-weight:600;}
+.auth-divider{
+  display:flex;align-items:center;gap:1rem;margin:1.2rem 0;
+  color:var(--ash);font-size:.8rem;
+}
+.auth-divider::before,.auth-divider::after{
+  content:'';flex:1;height:1px;background:rgba(247,242,232,.1);
+}
+.msg{
+  padding:.7rem 1rem;border-radius:10px;font-size:.85rem;
+  margin-bottom:1rem;display:none;
+}
+.msg.error{background:rgba(220,50,50,.15);border:1px solid rgba(220,50,50,.3);color:#ff7b7b;}
+.msg.success{background:rgba(92,163,61,.15);border:1px solid rgba(92,163,61,.3);color:var(--sprout);}
+.msg.show{display:block;}
+
+/* ─── FEATURES SECTION ─── */
+.section{padding:6rem 4rem;position:relative;}
+.section-label{
+  display:inline-block;
+  color:var(--harvest);font-size:.8rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem;
+}
+.section-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(2rem,4vw,3rem);font-weight:800;
+  color:var(--white);margin-bottom:1rem;
+}
+.section-sub{color:var(--ash);font-size:1.05rem;line-height:1.7;max-width:560px;}
+
+.features-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1.5rem;margin-top:4rem;
+}
+.feat-card{
+  background:rgba(247,242,232,.04);
+  border:1px solid rgba(247,242,232,.08);
+  border-radius:20px;padding:2rem;
+  transition:transform .3s,border-color .3s,background .3s;
+  cursor:default;
+}
+.feat-card:hover{
+  transform:translateY(-6px);
+  border-color:rgba(92,163,61,.3);
+  background:rgba(61,90,44,.15);
+}
+.feat-icon{
+  width:52px;height:52px;border-radius:14px;
+  background:rgba(92,163,61,.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;color:var(--sprout);margin-bottom:1.5rem;
+}
+.feat-card h3{
+  font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;
+  color:var(--white);margin-bottom:.6rem;
+}
+.feat-card p{color:var(--ash);font-size:.9rem;line-height:1.65;}
+
+/* ─── WEATHER SECTION ─── */
+.weather-section{
+  background:rgba(61,90,44,.1);
+  border-top:1px solid rgba(92,163,61,.1);
+  border-bottom:1px solid rgba(92,163,61,.1);
+}
+.weather-widget{
+  display:grid;grid-template-columns:1fr 2fr;gap:3rem;align-items:center;
+  margin-top:3rem;
+}
+.weather-main{
+  background:rgba(247,242,232,.05);border:1px solid rgba(92,163,61,.2);
+  border-radius:24px;padding:2rem;text-align:center;
+}
+.weather-temp{
+  font-family:'Playfair Display',serif;font-size:4rem;font-weight:900;
+  color:var(--sun);line-height:1;
+}
+.weather-loc{color:var(--ash);font-size:.9rem;margin-top:.5rem;}
+.weather-forecast{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;}
+.day-card{
+  background:rgba(247,242,232,.04);border:1px solid rgba(247,242,232,.08);
+  border-radius:14px;padding:1rem;text-align:center;
+}
+.day-name{font-size:.75rem;font-weight:600;color:var(--ash);text-transform:uppercase;letter-spacing:.06em;}
+.day-icon{font-size:1.5rem;margin:.5rem 0;color:var(--sun);}
+.day-temp{font-size:.95rem;font-weight:600;color:var(--white);}
+
+/* ─── MARKETPLACE PREVIEW ─── */
+.market-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin-top:3rem;
+}
+.product-card{
+  background:rgba(247,242,232,.05);
+  border:1px solid rgba(247,242,232,.08);
+  border-radius:18px;overflow:hidden;
+  transition:transform .3s,box-shadow .3s;
+}
+.product-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 12px 40px rgba(0,0,0,.3);
+}
+.product-img{
+  height:150px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:3.5rem;
+  background:rgba(61,90,44,.2);
+}
+.product-info{padding:1.2rem;}
+.product-name{font-weight:600;color:var(--white);margin-bottom:.3rem;}
+.product-price{color:var(--harvest);font-weight:700;font-size:1.1rem;}
+.product-seller{color:var(--ash);font-size:.8rem;margin-top:.3rem;}
+
+/* ─── COMMUNITY ─── */
+.community-section{
+  background:linear-gradient(135deg,rgba(61,90,44,.2) 0%,rgba(44,26,14,.8) 100%);
+}
+.community-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:2rem;margin-top:3rem;
+}
+.community-card{
+  background:rgba(247,242,232,.04);
+  border:1px solid rgba(247,242,232,.08);
+  border-radius:20px;padding:2rem;
+}
+.community-card h3{
+  font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--white);
+  margin-bottom:1rem;display:flex;align-items:center;gap:.75rem;
+}
+.community-card h3 i{color:var(--harvest);}
+.forum-item{
+  padding:.85rem 0;border-bottom:1px solid rgba(247,242,232,.06);
+  display:flex;gap:1rem;align-items:flex-start;
+}
+.forum-item:last-child{border-bottom:none;}
+.forum-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--moss),var(--leaf));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;font-weight:700;color:var(--white);flex-shrink:0;
+}
+.forum-text{flex:1;}
+.forum-title{font-size:.9rem;font-weight:500;color:var(--cream);margin-bottom:.2rem;}
+.forum-meta{font-size:.75rem;color:var(--ash);}
+
+/* ─── SECURITY SECTION ─── */
+.security-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem;
+}
+.sec-item{
+  display:flex;gap:1rem;align-items:flex-start;
+  padding:1.5rem;background:rgba(247,242,232,.04);
+  border:1px solid rgba(247,242,232,.07);border-radius:16px;
+}
+.sec-icon{
+  width:40px;height:40px;flex-shrink:0;border-radius:10px;
+  background:rgba(232,160,32,.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;color:var(--harvest);
+}
+.sec-item h4{font-size:.95rem;font-weight:600;color:var(--white);margin-bottom:.3rem;}
+.sec-item p{font-size:.82rem;color:var(--ash);line-height:1.5;}
+
+/* ─── FOOTER ─── */
+footer{
+  background:rgba(0,0,0,.4);
+  border-top:1px solid rgba(247,242,232,.08);
+  padding:4rem 4rem 2rem;
+}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem;}
+.footer-brand .logo{margin-bottom:1rem;}
+.footer-brand p{color:var(--ash);font-size:.9rem;line-height:1.7;max-width:280px;}
+.footer-col h4{color:var(--white);font-weight:600;margin-bottom:1.2rem;font-size:.95rem;}
+.footer-col a{
+  display:block;color:var(--ash);text-decoration:none;font-size:.88rem;
+  margin-bottom:.6rem;transition:color .25s;
+}
+.footer-col a:hover{color:var(--sprout);}
+.footer-bottom{
+  border-top:1px solid rgba(247,242,232,.08);
+  padding-top:1.5rem;
+  display:flex;justify-content:space-between;align-items:center;
+  color:var(--ash);font-size:.82rem;
+}
+.footer-socials{display:flex;gap:1rem;}
+.footer-socials a{
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(247,242,232,.06);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ash);text-decoration:none;transition:background .25s,color .25s;
+}
+.footer-socials a:hover{background:var(--moss);color:var(--white);}
+
+/* ─── LOADING OVERLAY ─── */
+#loading{
+  position:fixed;inset:0;background:var(--soil);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:9999;transition:opacity .5s,visibility .5s;
+}
+#loading.hide{opacity:0;visibility:hidden;}
+.loader-logo{
+  font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:900;
+  color:var(--sprout);margin-bottom:1.5rem;
+}
+.loader-bar{
+  width:200px;height:3px;background:rgba(247,242,232,.1);border-radius:50px;overflow:hidden;
+}
+.loader-fill{
+  height:100%;width:0;background:linear-gradient(90deg,var(--sprout),var(--harvest));
+  border-radius:50px;animation:load 1.5s ease-out forwards;
+}
+@keyframes load{to{width:100%}}
+
+/* ─── SCROLL REVEAL ─── */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .6s,transform .6s;}
+.reveal.visible{opacity:1;transform:none;}
+
+/* ─── TOAST ─── */
+#toast{
+  position:fixed;bottom:2rem;right:2rem;z-index:9999;
+  background:var(--moss);color:var(--white);
+  padding:1rem 1.5rem;border-radius:14px;font-size:.9rem;font-weight:500;
+  box-shadow:0 8px 30px rgba(0,0,0,.3);
+  transform:translateX(150%);transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+  display:flex;align-items:center;gap:.75rem;
+}
+#toast.show{transform:translateX(0);}
+#toast.error{background:#8b1a1a;}
+
+@media(max-width:1024px){
+  .hero{grid-template-columns:1fr;padding:7rem 2rem 3rem;}
+  .features-grid,.security-grid{grid-template-columns:repeat(2,1fr);}
+  .market-grid{grid-template-columns:repeat(2,1fr);}
+  .weather-widget{grid-template-columns:1fr;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+  nav{padding:1rem 2rem;}
+}
+@media(max-width:640px){
+  .features-grid,.security-grid,.community-grid,.market-grid{grid-template-columns:1fr;}
+  .hero-stats{flex-wrap:wrap;}
+  .section{padding:4rem 1.5rem;}
+  .weather-forecast{grid-template-columns:repeat(3,1fr);}
+  .footer-grid{grid-template-columns:1fr;}
+  nav .nav-links{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="loader-logo">🌿 AgroNexus</div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"><i class="fas fa-check-circle"></i><span id="toast-msg"></span></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo"><i class="fas fa-seedling"></i> AgroNexus</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#market">Marketplace</a>
+    <a href="#weather">Weather</a>
+    <a href="#community">Community</a>
+    <a href="#security">Security</a>
+    <a href="#auth" class="nav-cta">Get Started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="auth">
+  <div class="hero-bg"></div>
+  <div class="hero-left">
+    <div class="hero-badge"><span></span> #1 Agricultural Platform in Africa</div>
+    <h1>Grow <em>Smarter</em>,<br/>Farm <em>Better</em>,<br/>Earn <em>More</em></h1>
+    <p>AgroNexus unites farmers, markets, intelligence and community in one secure, modern platform built for Africa's agricultural future.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="showTab('register')"><i class="fas fa-leaf"></i> Join Free Today</button>
+      <button class="btn-outline" onclick="document.getElementById('features').scrollIntoView()"><i class="fas fa-play"></i> Explore Features</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">48K+</div><div class="stat-lbl">Farmers</div></div>
+      <div class="stat"><div class="stat-num">$2.4M</div><div class="stat-lbl">Traded</div></div>
+      <div class="stat"><div class="stat-num">12</div><div class="stat-lbl">Countries</div></div>
+      <div class="stat"><div class="stat-num">99.9%</div><div class="stat-lbl">Uptime</div></div>
+    </div>
+  </div>
+
+  <!-- AUTH CARD -->
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="tab-btn active" id="tab-login" onclick="showTab('login')">Sign In</button>
+      <button class="tab-btn" id="tab-register" onclick="showTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login">
+      <div id="login-msg" class="msg"></div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <i class="fas fa-envelope icon"></i>
+        <input type="email" id="login-email" placeholder="farmer@example.com"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <i class="fas fa-lock icon"></i>
+        <input type="password" id="login-pass" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div style="text-align:right;margin-bottom:1rem;">
+        <a href="#" style="color:var(--ash);font-size:.82rem;text-decoration:none;" onclick="showForgot()">Forgot password?</a>
+      </div>
+      <button class="btn-submit" onclick="doLogin()">
+        <i class="fas fa-sign-in-alt"></i> Sign In Securely
+      </button>
+      <div class="auth-divider">OR</div>
+      <div class="form-footer">New to AgroNexus? <a href="#" onclick="showTab('register')">Create Account</a></div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="form-register" style="display:none;">
+      <div id="reg-msg" class="msg"></div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <i class="fas fa-user icon"></i>
+        <input type="text" id="reg-name" placeholder="John Kamau"/>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <i class="fas fa-envelope icon"></i>
+        <input type="email" id="reg-email" placeholder="farmer@example.com"/>
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <i class="fas fa-phone icon"></i>
+        <input type="tel" id="reg-phone" placeholder="+254 712 345 678"/>
+      </div>
+      <div class="form-group">
+        <label>Location / County</label>
+        <i class="fas fa-map-marker-alt icon"></i>
+        <input type="text" id="reg-location" placeholder="Nakuru, Kenya"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <i class="fas fa-lock icon"></i>
+        <input type="password" id="reg-pass" placeholder="Min 8 chars, strong"/>
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <i class="fas fa-shield-alt icon"></i>
+        <input type="password" id="reg-pass2" placeholder="Repeat password"/>
+      </div>
+      <button class="btn-submit" onclick="doRegister()">
+        <i class="fas fa-seedling"></i> Create My Account
+      </button>
+      <div class="form-footer">Already have an account? <a href="#" onclick="showTab('login')">Sign In</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-label">Platform Features</div>
+  <div class="section-title">Everything a Farmer Needs</div>
+  <p class="section-sub">From financial tools to weather intelligence, AgroNexus puts the power of modern agriculture in your hands.</p>
+  <div class="features-grid">
+    <div class="feat-card reveal">
+      <div class="feat-icon"><i class="fas fa-chart-line"></i></div>
+      <h3>Business Intelligence</h3>
+      <p>Track income, expenses, deposits and withdrawals. Visualize your farm's financial health with real-time dashboards and profitability reports.</p>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-icon"><i class="fas fa-graduation-cap"></i></div>
+      <h3>Learning Academy</h3>
+      <p>Access hundreds of curated courses on modern farming, sustainable techniques, agribusiness management and climate-smart agriculture.</p>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-icon"><i class="fas fa-cloud-sun-rain"></i></div>
+      <h3>Hyper-local Weather</h3>
+      <p>Get real-time weather forecasts precise to your farm location. Receive alerts for extreme weather events and optimal planting windows.</p>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-icon"><i class="fas fa-store"></i></div>
+      <h3>Digital Marketplace</h3>
+      <p>Buy and sell crops, livestock, equipment and services. Secure escrow payments protect every transaction on the platform.</p>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-icon"><i class="fas fa-users"></i></div>
+      <h3>Farmer Community</h3>
+      <p>Join county-based groups, participate in forums, share tips, post questions and collaborate with thousands of fellow farmers.</p>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-icon"><i class="fas fa-robot"></i></div>
+      <h3>AI Crop Advisor</h3>
+      <p>Upload a photo of your crop for instant disease detection, or ask our AI assistant for personalized planting and fertilization advice.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WEATHER -->
+<section class="section weather-section" id="weather">
+  <div class="section-label">Weather Intelligence</div>
+  <div class="section-title">Farm-Accurate Forecasts</div>
+  <p class="section-sub">Know exactly when to plant, irrigate, spray or harvest with hyper-local weather data sourced from multiple meteorological APIs.</p>
+  <div class="weather-widget reveal">
+    <div class="weather-main">
+      <div style="font-size:3rem;margin-bottom:.5rem;">⛅</div>
+      <div class="weather-temp" id="wtemp">24°C</div>
+      <div style="color:var(--cream);font-size:1rem;margin:.3rem 0;">Partly Cloudy</div>
+      <div class="weather-loc"><i class="fas fa-map-marker-alt"></i> Nakuru, Kenya</div>
+      <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid rgba(247,242,232,.1);">
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;color:var(--ash);margin-bottom:.4rem;">
+          <span><i class="fas fa-tint"></i> Humidity</span><span style="color:var(--white);">72%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;color:var(--ash);margin-bottom:.4rem;">
+          <span><i class="fas fa-wind"></i> Wind</span><span style="color:var(--white);">12 km/h</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;color:var(--ash);">
+          <span><i class="fas fa-eye"></i> UV Index</span><span style="color:var(--harvest);">High</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="color:var(--ash);font-size:.85rem;margin-bottom:1rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;">5-Day Forecast</div>
+      <div class="weather-forecast">
+        <div class="day-card"><div class="day-name">Mon</div><div class="day-icon">☀️</div><div class="day-temp">27°</div></div>
+        <div class="day-card"><div class="day-name">Tue</div><div class="day-icon">🌧️</div><div class="day-temp">20°</div></div>
+        <div class="day-card"><div class="day-name">Wed</div><div class="day-icon">⛅</div><div class="day-temp">23°</div></div>
+        <div class="day-card"><div class="day-name">Thu</div><div class="day-icon">🌤️</div><div class="day-temp">25°</div></div>
+        <div class="day-card"><div class="day-name">Fri</div><div class="day-icon">🌦️</div><div class="day-temp">22°</div></div>
+      </div>
+      <div style="margin-top:1.5rem;padding:1.2rem;background:rgba(232,160,32,.1);border:1px solid rgba(232,160,32,.25);border-radius:14px;">
+        <div style="color:var(--harvest);font-weight:600;margin-bottom:.4rem;"><i class="fas fa-exclamation-triangle"></i> Farming Alert</div>
+        <div style="color:var(--cream);font-size:.88rem;line-height:1.6;">Heavy rainfall expected Tuesday. Harvest any ripe produce by Monday evening. Avoid spraying pesticides Monday–Wednesday.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARKETPLACE -->
+<section class="section" id="market">
+  <div class="section-label">Marketplace</div>
+  <div class="section-title">Buy & Sell with Confidence</div>
+  <p class="section-sub">A secure, verified marketplace connecting farmers, buyers, and suppliers across Africa.</p>
+  <div class="market-grid reveal">
+    <div class="product-card">
+      <div class="product-img">🌽</div>
+      <div class="product-info">
+        <div class="product-name">Premium Maize — 1 Tonne</div>
+        <div class="product-price">KES 28,500</div>
+        <div class="product-seller"><i class="fas fa-check-circle" style="color:var(--sprout)"></i> Verified • Nakuru</div>
+      </div>
+    </div>
+    <div class="product-card">
+      <div class="product-img">🐄</div>
+      <div class="product-info">
+        <div class="product-name">Friesian Dairy Cow</div>
+        <div class="product-price">KES 85,000</div>
+        <div class="product-seller"><i class="fas fa-check-circle" style="color:var(--sprout)"></i> Verified • Eldoret</div>
+      </div>
+    </div>
+    <div class="product-card">
+      <div class="product-img">🚜</div>
+      <div class="product-info">
+        <div class="product-name">Tractor Hire — Per Day</div>
+        <div class="product-price">KES 4,500</div>
+        <div class="product-seller"><i class="fas fa-check-circle" style="color:var(--sprout)"></i> Verified • Kisumu</div>
+      </div>
+    </div>
+    <div class="product-card">
+      <div class="product-img">🫘</div>
+      <div class="product-info">
+        <div class="product-name">Organic Coffee Beans — 50kg</div>
+        <div class="product-price">KES 18,200</div>
+        <div class="product-seller"><i class="fas fa-check-circle" style="color:var(--sprout)"></i> Verified • Murang'a</div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:2.5rem;">
+    <button class="btn-primary" onclick="showToast('Sign in to access full marketplace','success')">
+      <i class="fas fa-store"></i> Browse All Listings
+    </button>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section class="section community-section" id="community">
+  <div class="section-label">Farmer Unity</div>
+  <div class="section-title">Grow Together, Rise Together</div>
+  <p class="section-sub">Connect with farmers in your region. Share knowledge, solve problems, and find strength in numbers.</p>
+  <div class="community-grid reveal">
+    <div class="community-card">
+      <h3><i class="fas fa-comments"></i> Active Forum Threads</h3>
+      <div class="forum-item">
+        <div class="forum-avatar">JK</div>
+        <div class="forum-text">
+          <div class="forum-title">Best drought-resistant maize varieties for 2025?</div>
+          <div class="forum-meta">John K. · Nakuru · 47 replies</div>
+        </div>
+      </div>
+      <div class="forum-item">
+        <div class="forum-avatar">AM</div>
+        <div class="forum-text">
+          <div class="forum-title">Sharing my organic tomato success story 🍅</div>
+          <div class="forum-meta">Amina M. · Mombasa · 31 replies</div>
+        </div>
+      </div>
+      <div class="forum-item">
+        <div class="forum-avatar">PO</div>
+        <div class="forum-text">
+          <div class="forum-title">Government subsidies — who has claimed this season?</div>
+          <div class="forum-meta">Peter O. · Kisumu · 89 replies</div>
+        </div>
+      </div>
+    </div>
+    <div class="community-card">
+      <h3><i class="fas fa-calendar-alt"></i> Upcoming Events</h3>
+      <div class="forum-item">
+        <div class="forum-avatar" style="background:linear-gradient(135deg,var(--harvest),#c47a10);">📅</div>
+        <div class="forum-text">
+          <div class="forum-title">East Africa Agri-Expo 2025</div>
+          <div class="forum-meta">Mar 15 • Nairobi KICC • 2,400 attending</div>
+        </div>
+      </div>
+      <div class="forum-item">
+        <div class="forum-avatar" style="background:linear-gradient(135deg,var(--harvest),#c47a10);">🎓</div>
+        <div class="forum-text">
+          <div class="forum-title">Free Webinar: Climate-Smart Farming</div>
+          <div class="forum-meta">Mar 20 • Online • 340 registered</div>
+        </div>
+      </div>
+      <div class="forum-item">
+        <div class="forum-avatar" style="background:linear-gradient(135deg,var(--harvest),#c47a10);">🤝</div>
+        <div class="forum-text">
+          <div class="forum-title">Nakuru Farmer Cooperative Meetup</div>
+          <div class="forum-meta">Mar 25 • Nakuru Town Hall • 180 attending</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section class="section" id="security">
+  <div class="section-label">Built Fort-Knox Tough</div>
+  <div class="section-title">Your Data Is Sacred</div>
+  <p class="section-sub">AgroNexus uses enterprise-grade security so you can farm with peace of mind.</p>
+  <div class="security-grid reveal">
+    <div class="sec-item">
+      <div class="sec-icon"><i class="fas fa-user-shield"></i></div>
+      <div><h4>bcrypt Password Hashing</h4><p>Passwords are salted and hashed with bcrypt (cost factor 12) — never stored in plain text, ever.</p></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-icon"><i class="fas fa-key"></i></div>
+      <div><h4>JWT + Refresh Tokens</h4><p>Signed RS256 JWTs with 15-min expiry. Refresh tokens are rotated, revokable, and stored as secure httpOnly cookies.</p></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-icon"><i class="fas fa-shield-virus"></i></div>
+      <div><h4>Rate Limiting & Brute-Force Guard</h4><p>Login attempts are rate-limited per IP. Accounts lock after 5 failed attempts with exponential backoff.</p></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-icon"><i class="fas fa-database"></i></div>
+      <div><h4>Encrypted MongoDB Atlas</h4><p>Database encrypted at rest (AES-256) and in transit (TLS 1.3). Secrets stored in Vercel environment variables, never in code.</p></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-icon"><i class="fas fa-bug"></i></div>
+      <div><h4>XSS & Injection Prevention</h4><p>All inputs are sanitized server-side. Helmet.js headers, CSP policies, and parameterized queries prevent common attacks.</p></div>
+    </div>
+    <div class="sec-item">
+      <div class="sec-icon"><i class="fas fa-eye"></i></div>
+      <div><h4>Audit Logging</h4><p>Every login, transaction, and admin action is logged with IP, timestamp and user ID. Full audit trail for compliance.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="logo"><i class="fas fa-seedling"></i> AgroNexus</div>
+      <p>Empowering Africa's farmers with technology, community, and financial tools for a prosperous agricultural future.</p>
+      <div class="footer-socials" style="margin-top:1.2rem;">
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-facebook"></i></a>
+        <a href="#"><i class="fab fa-whatsapp"></i></a>
+        <a href="#"><i class="fab fa-youtube"></i></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <a href="#">Marketplace</a>
+      <a href="#">Weather</a>
+      <a href="#">Learning</a>
+      <a href="#">Community</a>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <a href="#">About Us</a>
+      <a href="#">Blog</a>
+      <a href="#">Careers</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Use</a>
+      <a href="#">Cookie Policy</a>
+      <a href="#">Security</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 AgroNexus Ltd. All rights reserved.</span>
+    <span style="font-family:'DM Mono',monospace;font-size:.78rem;">v2.4.1 · 99.9% uptime</span>
+  </div>
+</footer>
+
+<script>
+/* ─── CONFIG ─── */
+const API = 'https://your-vercel-app.vercel.app/api'; // ← Replace with your Vercel URL
+
+/* ─── LOADER ─── */
+window.addEventListener('load',()=>{
+  setTimeout(()=>document.getElementById('loading').classList.add('hide'),1600);
+});
+
+/* ─── TABS ─── */
+function showTab(t){
+  document.getElementById('form-login').style.display = t==='login'?'block':'none';
+  document.getElementById('form-register').style.display = t==='register'?'block':'none';
+  document.getElementById('tab-login').classList.toggle('active',t==='login');
+  document.getElementById('tab-register').classList.toggle('active',t==='register');
+}
+
+/* ─── TOAST ─── */
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  const m=document.getElementById('toast-msg');
+  t.className='';t.classList.add(type);
+  m.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+/* ─── MSG ─── */
+function setMsg(id,msg,type){
+  const el=document.getElementById(id);
+  el.textContent=msg;el.className='msg show '+type;
+}
+function clearMsg(id){
+  document.getElementById(id).className='msg';
+}
+
+/* ─── VALIDATION ─── */
+function validateEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
+function validatePassword(p){return p.length>=8;}
+function sanitize(str){
+  const d=document.createElement('div');
+  d.appendChild(document.createTextNode(str));
+  return d.innerHTML;
+}
+
+/* ─── RATE LIMITER (client-side gate) ─── */
+const attempts={login:0,lastLogin:0};
+function checkRateLimit(){
+  const now=Date.now();
+  if(now-attempts.lastLogin>300000)attempts.login=0;// reset after 5 min
+  if(attempts.login>=5){
+    const wait=Math.ceil((300000-(now-attempts.lastLogin))/1000);
+    setMsg('login-msg',`Too many attempts. Wait ${wait}s or contact support.`,'error');
+    return false;
+  }
+  return true;
+}
+
+/* ─── LOGIN ─── */
+async function doLogin(){
+  clearMsg('login-msg');
+  if(!checkRateLimit())return;
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  if(!email||!pass){setMsg('login-msg','Please fill in all fields.','error');return;}
+  if(!validateEmail(email)){setMsg('login-msg','Enter a valid email address.','error');return;}
+
+  const btn=document.querySelector('#form-login .btn-submit');
+  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Authenticating…';
+  btn.disabled=true;
+  attempts.login++;attempts.lastLogin=Date.now();
+
+  try{
+    const res=await fetch(`${API}/auth/login`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',// for httpOnly cookie
+      body:JSON.stringify({email,password:pass})
+    });
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.message||'Login failed');
+
+    // Store access token (short-lived) in memory only — NOT localStorage
+    window._authToken=data.accessToken;
+    window._userRole=data.user.role;
+
+    showToast(`Welcome back, ${data.user.name}! 🌿`,'success');
+    setTimeout(()=>{
+      if(data.user.role==='admin')window.location.href='admin.html';
+      else window.location.href='user.html';
+    },1200);
+  }catch(err){
+    setMsg('login-msg',err.message,'error');
+    btn.innerHTML='<i class="fas fa-sign-in-alt"></i> Sign In Securely';
+    btn.disabled=false;
+  }
+}
+
+/* ─── REGISTER ─── */
+async function doRegister(){
+  clearMsg('reg-msg');
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const phone=document.getElementById('reg-phone').value.trim();
+  const location=document.getElementById('reg-location').value.trim();
+  const pass=document.getElementById('reg-pass').value;
+  const pass2=document.getElementById('reg-pass2').value;
+
+  if(!name||!email||!phone||!location||!pass||!pass2){
+    setMsg('reg-msg','All fields are required.','error');return;
+  }
+  if(!validateEmail(email)){setMsg('reg-msg','Invalid email format.','error');return;}
+  if(!validatePassword(pass)){setMsg('reg-msg','Password must be at least 8 characters.','error');return;}
+  if(pass!==pass2){setMsg('reg-msg','Passwords do not match.','error');return;}
+  if(!/^[a-zA-Z\s]{2,50}$/.test(name)){setMsg('reg-msg','Name must be 2-50 letters only.','error');return;}
+
+  const btn=document.querySelector('#form-register .btn-submit');
+  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Creating account…';
+  btn.disabled=true;
+
+  try{
+    const res=await fetch(`${API}/auth/register`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body:JSON.stringify({
+        name:sanitize(name),
+        email,phone:sanitize(phone),
+        location:sanitize(location),
+        password:pass
+        // NOTE: password is hashed on the server with bcrypt(12) — never stored plain
+      })
+    });
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.message||'Registration failed');
+
+    showToast('Account created! Please sign in. 🌱','success');
+    setTimeout(()=>showTab('login'),1500);
+  }catch(err){
+    setMsg('reg-msg',err.message,'error');
+  }finally{
+    btn.innerHTML='<i class="fas fa-seedling"></i> Create My Account';
+    btn.disabled=false;
+  }
+}
+
+/* ─── FORGOT PASSWORD ─── */
+function showForgot(){
+  const email=prompt('Enter your registered email address:');
+  if(!email)return;
+  if(!validateEmail(email)){showToast('Invalid email address','error');return;}
+  fetch(`${API}/auth/forgot-password`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email})
+  }).then(()=>showToast('Reset link sent if account exists','success'));
+}
+
+/* ─── SCROLL REVEAL ─── */
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+/* ─── LIVE WEATHER (fetch from your backend which calls OpenWeather) ─── */
+async function fetchWeather(){
+  try{
+    const res=await fetch(`${API}/weather?location=Nakuru`);
+    if(!res.ok)return;
+    const d=await res.json();
+    if(d.temp)document.getElementById('wtemp').textContent=`${d.temp}°C`;
+  }catch{}
+}
+fetchWeather();
+</script>
+</body>
+</html>
