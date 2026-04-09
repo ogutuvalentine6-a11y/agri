@@ -6,6 +6,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 const app = express();
 
@@ -18,9 +19,9 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 
-// Serve static HTML files from root
-const path = require('path');
-app.use(express.static(__dirname));
+// Serve static HTML files from parent directory
+const staticPath = path.join(__dirname, '..');
+app.use(express.static(staticPath));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -1015,15 +1016,15 @@ app.get('/api/weather', async (req, res) => {
 
 // Serve HTML files
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(staticPath, 'index.html'));
 });
 
 app.get('/user.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'user.html'));
+  res.sendFile(path.join(staticPath, 'user.html'));
 });
 
 app.get('/admin.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
+  res.sendFile(path.join(staticPath, 'admin.html'));
 });
 
 // 404 handler
@@ -1031,9 +1032,8 @@ app.use('*', (req, res) => {
   if (req.path.startsWith('/api')) {
     res.status(404).json({ message: 'API route not found' });
   } else {
-    res.status(404).sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(staticPath, 'index.html'));
   }
 });
 
-// Export for Vercel
 module.exports = app;
