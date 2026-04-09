@@ -12,11 +12,15 @@ const app = express();
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: ['https://your-frontend.vercel.app', 'http://localhost:3000', 'http://127.0.0.1:5500'],
+  origin: ['https://agri-gamma-red.vercel.app', 'http://localhost:3000', 'http://127.0.0.1:5500'],
   credentials: true
 }));
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
+
+// Serve static HTML files from root
+const path = require('path');
+app.use(express.static(__dirname));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -1009,9 +1013,26 @@ app.get('/api/weather', async (req, res) => {
   }
 });
 
+// Serve HTML files
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/user.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'user.html'));
+});
+
+app.get('/admin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 // 404 handler
 app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+  if (req.path.startsWith('/api')) {
+    res.status(404).json({ message: 'API route not found' });
+  } else {
+    res.status(404).sendFile(path.join(__dirname, 'index.html'));
+  }
 });
 
 // Export for Vercel
