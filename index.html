@@ -818,177 +818,220 @@ footer{
 
 <script>
 /* ─── CONFIG ─── */
-const API = '/api'; // ← Replace with your Vercel URL
+// Use relative path for API (will work when backend is added later)
+const API = '/api';
+
+// Mock user for demo - remove this when backend is ready
+const MOCK_MODE = true;
 
 /* ─── LOADER ─── */
-window.addEventListener('load',()=>{
-  setTimeout(()=>document.getElementById('loading').classList.add('hide'),1600);
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const loader = document.getElementById('loading');
+    if (loader) loader.classList.add('hide');
+  }, 800);
 });
 
 /* ─── TABS ─── */
-function showTab(t){
-  document.getElementById('form-login').style.display = t==='login'?'block':'none';
-  document.getElementById('form-register').style.display = t==='register'?'block':'none';
-  document.getElementById('tab-login').classList.toggle('active',t==='login');
-  document.getElementById('tab-register').classList.toggle('active',t==='register');
+function showTab(t) {
+  const loginForm = document.getElementById('form-login');
+  const registerForm = document.getElementById('form-register');
+  const loginTab = document.getElementById('tab-login');
+  const registerTab = document.getElementById('tab-register');
+  
+  if (loginForm && registerForm) {
+    loginForm.style.display = t === 'login' ? 'block' : 'none';
+    registerForm.style.display = t === 'register' ? 'block' : 'none';
+  }
+  if (loginTab && registerTab) {
+    if (t === 'login') {
+      loginTab.classList.add('active');
+      registerTab.classList.remove('active');
+    } else {
+      registerTab.classList.add('active');
+      loginTab.classList.remove('active');
+    }
+  }
 }
 
 /* ─── TOAST ─── */
-function showToast(msg,type='success'){
-  const t=document.getElementById('toast');
-  const m=document.getElementById('toast-msg');
-  t.className='';t.classList.add(type);
-  m.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3500);
+function showToast(msg, type = 'success') {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.innerHTML = '<i class="fas fa-check-circle"></i><span id="toast-msg"></span>';
+    document.body.appendChild(toast);
+  }
+  const toastMsg = document.getElementById('toast-msg');
+  toast.className = type === 'error' ? 'error' : '';
+  if (toastMsg) toastMsg.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3500);
 }
 
-/* ─── MSG ─── */
-function setMsg(id,msg,type){
-  const el=document.getElementById(id);
-  el.textContent=msg;el.className='msg show '+type;
+function setMsg(id, msg, type) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.textContent = msg;
+    el.className = 'msg show ' + type;
+  }
 }
-function clearMsg(id){
-  document.getElementById(id).className='msg';
+
+function clearMsg(id) {
+  const el = document.getElementById(id);
+  if (el) el.className = 'msg';
 }
 
 /* ─── VALIDATION ─── */
-function validateEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
-function validatePassword(p){return p.length>=8;}
-function sanitize(str){
-  const d=document.createElement('div');
-  d.appendChild(document.createTextNode(str));
-  return d.innerHTML;
+function validateEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
-/* ─── RATE LIMITER (client-side gate) ─── */
-const attempts={login:0,lastLogin:0};
-function checkRateLimit(){
-  const now=Date.now();
-  if(now-attempts.lastLogin>300000)attempts.login=0;// reset after 5 min
-  if(attempts.login>=5){
-    const wait=Math.ceil((300000-(now-attempts.lastLogin))/1000);
-    setMsg('login-msg',`Too many attempts. Wait ${wait}s or contact support.`,'error');
-    return false;
-  }
-  return true;
+function validatePassword(p) {
+  return p.length >= 8;
 }
 
-/* ─── LOGIN ─── */
-async function doLogin(){
+/* ─── MOCK LOGIN (for testing) ─── */
+async function doLogin() {
   clearMsg('login-msg');
-  if(!checkRateLimit())return;
-  const email=document.getElementById('login-email').value.trim();
-  const pass=document.getElementById('login-pass').value;
-  if(!email||!pass){setMsg('login-msg','Please fill in all fields.','error');return;}
-  if(!validateEmail(email)){setMsg('login-msg','Enter a valid email address.','error');return;}
-
-  const btn=document.querySelector('#form-login .btn-submit');
-  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Authenticating…';
-  btn.disabled=true;
-  attempts.login++;attempts.lastLogin=Date.now();
-
-  try{
-    const res=await fetch(`${API}/auth/login`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      credentials:'include',// for httpOnly cookie
-      body:JSON.stringify({email,password:pass})
-    });
-    const data=await res.json();
-    if(!res.ok)throw new Error(data.message||'Login failed');
-
-    // Store access token (short-lived) in memory only — NOT localStorage
-    window._authToken=data.accessToken;
-    window._userRole=data.user.role;
-
-    showToast(`Welcome back, ${data.user.name}! 🌿`,'success');
-    setTimeout(()=>{
-      if(data.user.role==='admin')window.location.href='admin.html';
-      else window.location.href='user.html';
-    },1200);
-  }catch(err){
-    setMsg('login-msg',err.message,'error');
-    btn.innerHTML='<i class="fas fa-sign-in-alt"></i> Sign In Securely';
-    btn.disabled=false;
+  
+  const email = document.getElementById('login-email')?.value.trim();
+  const password = document.getElementById('login-pass')?.value;
+  
+  if (!email || !password) {
+    setMsg('login-msg', 'Please fill in all fields.', 'error');
+    return;
   }
+  
+  if (!validateEmail(email)) {
+    setMsg('login-msg', 'Enter a valid email address.', 'error');
+    return;
+  }
+  
+  const btn = document.querySelector('#form-login .btn-submit');
+  if (btn) {
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating…';
+    btn.disabled = true;
+  }
+  
+  // Mock authentication - redirect based on email
+  setTimeout(() => {
+    if (email === 'admin@agronexus.com' || email === 'admin@example.com') {
+      showToast('Welcome Admin! Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = 'admin.html';
+      }, 1000);
+    } else {
+      showToast('Welcome to AgroNexus! Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = 'user.html';
+      }, 1000);
+    }
+    
+    if (btn) {
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In Securely';
+      btn.disabled = false;
+    }
+  }, 1000);
 }
 
-/* ─── REGISTER ─── */
-async function doRegister(){
+/* ─── MOCK REGISTER ─── */
+async function doRegister() {
   clearMsg('reg-msg');
-  const name=document.getElementById('reg-name').value.trim();
-  const email=document.getElementById('reg-email').value.trim();
-  const phone=document.getElementById('reg-phone').value.trim();
-  const location=document.getElementById('reg-location').value.trim();
-  const pass=document.getElementById('reg-pass').value;
-  const pass2=document.getElementById('reg-pass2').value;
-
-  if(!name||!email||!phone||!location||!pass||!pass2){
-    setMsg('reg-msg','All fields are required.','error');return;
+  
+  const name = document.getElementById('reg-name')?.value.trim();
+  const email = document.getElementById('reg-email')?.value.trim();
+  const phone = document.getElementById('reg-phone')?.value.trim();
+  const location = document.getElementById('reg-location')?.value.trim();
+  const pass = document.getElementById('reg-pass')?.value;
+  const pass2 = document.getElementById('reg-pass2')?.value;
+  
+  if (!name || !email || !phone || !location || !pass || !pass2) {
+    setMsg('reg-msg', 'All fields are required.', 'error');
+    return;
   }
-  if(!validateEmail(email)){setMsg('reg-msg','Invalid email format.','error');return;}
-  if(!validatePassword(pass)){setMsg('reg-msg','Password must be at least 8 characters.','error');return;}
-  if(pass!==pass2){setMsg('reg-msg','Passwords do not match.','error');return;}
-  if(!/^[a-zA-Z\s]{2,50}$/.test(name)){setMsg('reg-msg','Name must be 2-50 letters only.','error');return;}
-
-  const btn=document.querySelector('#form-register .btn-submit');
-  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Creating account…';
-  btn.disabled=true;
-
-  try{
-    const res=await fetch(`${API}/auth/register`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      credentials:'include',
-      body:JSON.stringify({
-        name:sanitize(name),
-        email,phone:sanitize(phone),
-        location:sanitize(location),
-        password:pass
-        // NOTE: password is hashed on the server with bcrypt(12) — never stored plain
-      })
-    });
-    const data=await res.json();
-    if(!res.ok)throw new Error(data.message||'Registration failed');
-
-    showToast('Account created! Please sign in. 🌱','success');
-    setTimeout(()=>showTab('login'),1500);
-  }catch(err){
-    setMsg('reg-msg',err.message,'error');
-  }finally{
-    btn.innerHTML='<i class="fas fa-seedling"></i> Create My Account';
-    btn.disabled=false;
+  
+  if (!validateEmail(email)) {
+    setMsg('reg-msg', 'Invalid email format.', 'error');
+    return;
   }
+  
+  if (!validatePassword(pass)) {
+    setMsg('reg-msg', 'Password must be at least 8 characters.', 'error');
+    return;
+  }
+  
+  if (pass !== pass2) {
+    setMsg('reg-msg', 'Passwords do not match.', 'error');
+    return;
+  }
+  
+  const btn = document.querySelector('#form-register .btn-submit');
+  if (btn) {
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account…';
+    btn.disabled = true;
+  }
+  
+  // Mock registration
+  setTimeout(() => {
+    showToast('Account created! Please sign in. 🌱', 'success');
+    setTimeout(() => showTab('login'), 1500);
+    
+    if (btn) {
+      btn.innerHTML = '<i class="fas fa-seedling"></i> Create My Account';
+      btn.disabled = false;
+    }
+  }, 1000);
 }
 
 /* ─── FORGOT PASSWORD ─── */
-function showForgot(){
-  const email=prompt('Enter your registered email address:');
-  if(!email)return;
-  if(!validateEmail(email)){showToast('Invalid email address','error');return;}
-  fetch(`${API}/auth/forgot-password`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({email})
-  }).then(()=>showToast('Reset link sent if account exists','success'));
+function showForgot() {
+  const email = prompt('Enter your registered email address:');
+  if (email && validateEmail(email)) {
+    showToast('Password reset link sent to ' + email, 'success');
+  } else if (email) {
+    showToast('Please enter a valid email address', 'error');
+  }
+}
+
+/* ─── WEATHER (mock data - works without API) ─── */
+async function fetchWeather() {
+  // Mock weather data - no API call needed
+  const weatherData = {
+    temp: 24,
+    description: 'Partly Cloudy',
+    humidity: 72,
+    wind: 12,
+    feelsLike: 22,
+    icon: '⛅'
+  };
+  
+  const tempEl = document.getElementById('wtemp');
+  if (tempEl) tempEl.textContent = `${weatherData.temp}°C`;
+  
+  const tempDashEl = document.getElementById('dash-temp');
+  if (tempDashEl) tempDashEl.textContent = `${weatherData.temp}°C`;
 }
 
 /* ─── SCROLL REVEAL ─── */
-const observer=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
-},{threshold:0.1});
-document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.1 });
 
-/* ─── LIVE WEATHER (fetch from your backend which calls OpenWeather) ─── */
-async function fetchWeather(){
-  try{
-    const res=await fetch(`${API}/weather?location=Nakuru`);
-    if(!res.ok)return;
-    const d=await res.json();
-    if(d.temp)document.getElementById('wtemp').textContent=`${d.temp}°C`;
-  }catch{}
-}
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+/* ─── INIT ─── */
+// Run weather fetch on page load
 fetchWeather();
+
+// Make sure loader hides
+window.addEventListener('load', () => {
+  const loader = document.getElementById('loading');
+  if (loader) setTimeout(() => loader.classList.add('hide'), 500);
+});
 </script>
 </body>
 </html>
