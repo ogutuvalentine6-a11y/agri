@@ -139,7 +139,7 @@ nav{
 }
 .stat-lbl{color:var(--ash);font-size:.8rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;}
 
-/* ─── AUTH CARD (right side of hero) ─── */
+/* ─── AUTH CARD ─── */
 .auth-card{
   background:rgba(247,242,232,.04);
   border:1px solid rgba(247,242,232,.1);
@@ -391,16 +391,16 @@ footer{
 }
 .footer-socials a:hover{background:var(--moss);color:var(--white);}
 
-/* ─── LOADING OVERLAY ─── */
+/* ─── LOADING OVERLAY - FIXED - HIDDEN BY DEFAULT ─── */
 #loading{
   position:fixed;inset:0;background:var(--soil);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  z-index:9999;transition:opacity 0.5s, visibility 0.5s;
+  z-index:9999;
+  transition:opacity 0.3s, visibility 0.3s;
 }
 #loading.hide{
   opacity:0;
   visibility:hidden;
-  pointer-events:none;
 }
 .loader-logo{
   font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:900;
@@ -410,10 +410,14 @@ footer{
   width:200px;height:3px;background:rgba(247,242,232,.1);border-radius:50px;overflow:hidden;
 }
 .loader-fill{
-  height:100%;width:0;background:linear-gradient(90deg,var(--sprout),var(--harvest));
-  border-radius:50px;animation:load 1.5s ease-out forwards;
+  height:100%;width:100%;background:linear-gradient(90deg,var(--sprout),var(--harvest));
+  border-radius:50px;
+  animation:load 0.8s ease-out;
 }
-@keyframes load{to{width:100%}}
+@keyframes load{
+  0%{width:0%;}
+  100%{width:100%;}
+}
 
 /* ─── SCROLL REVEAL ─── */
 .reveal{opacity:0;transform:translateY(30px);transition:opacity .6s,transform .6s;}
@@ -451,7 +455,7 @@ footer{
 </head>
 <body>
 
-<!-- Loading -->
+<!-- LOADER - WILL BE HIDDEN IMMEDIATELY BY JAVASCRIPT -->
 <div id="loading">
   <div class="loader-logo">🌿 AgroNexus</div>
   <div class="loader-bar"><div class="loader-fill"></div></div>
@@ -821,26 +825,27 @@ footer{
 </footer>
 
 <script>
-/* ─── FIXED SCRIPT - NO BACKEND DEPENDENCY ─── */
+// ============================================
+// AGRO NEXUS - FULLY FUNCTIONAL FRONTEND
+// No backend required - works immediately!
+// ============================================
 
-// Hide loader immediately when page is ready
-window.addEventListener('DOMContentLoaded', function() {
-  setTimeout(function() {
-    var loader = document.getElementById('loading');
-    if (loader) {
-      loader.classList.add('hide');
-    }
-  }, 500);
-});
+// HIDE LOADER IMMEDIATELY - FIXED!
+(function hideLoader() {
+  var loader = document.getElementById('loading');
+  if (loader) {
+    loader.classList.add('hide');
+  }
+})();
 
-// Also hide on full load
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    var loader = document.getElementById('loading');
-    if (loader) {
+// Also hide on DOM ready just in case
+document.addEventListener('DOMContentLoaded', function() {
+  var loader = document.getElementById('loading');
+  if (loader) {
+    setTimeout(function() {
       loader.classList.add('hide');
-    }
-  }, 300);
+    }, 100);
+  }
 });
 
 /* ─── TABS ─── */
@@ -897,7 +902,7 @@ function validateEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
-/* ─── DEMO LOGIN (works without backend) ─── */
+/* ─── DEMO LOGIN (works immediately) ─── */
 function doLogin() {
   clearMsg('login-msg');
   
@@ -920,25 +925,25 @@ function doLogin() {
     btn.disabled = true;
   }
   
-  // Demo authentication
+  // Demo authentication - redirects immediately
   setTimeout(function() {
     if (email === 'admin@agronexus.com') {
       showToast('Welcome Admin! Redirecting...', 'success');
       setTimeout(function() {
         window.location.href = 'admin.html';
-      }, 800);
+      }, 500);
     } else {
       showToast('Welcome to AgroNexus! Redirecting...', 'success');
       setTimeout(function() {
         window.location.href = 'user.html';
-      }, 800);
+      }, 500);
     }
     
     if (btn) {
       btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In Securely';
       btn.disabled = false;
     }
-  }, 800);
+  }, 500);
 }
 
 /* ─── DEMO REGISTER ─── */
@@ -982,13 +987,13 @@ function doRegister() {
     showToast('Account created! Please sign in. 🌱', 'success');
     setTimeout(function() {
       showTab('login');
-    }, 1500);
+    }, 1000);
     
     if (btn) {
       btn.innerHTML = '<i class="fas fa-seedling"></i> Create My Account';
       btn.disabled = false;
     }
-  }, 1000);
+  }, 800);
 }
 
 /* ─── FORGOT PASSWORD ─── */
@@ -1012,14 +1017,7 @@ document.querySelectorAll('.reveal').forEach(function(el) {
   observer.observe(el);
 });
 
-/* ─── MOCK WEATHER ─── */
-function fetchWeather() {
-  var tempEl = document.getElementById('wtemp');
-  if (tempEl) tempEl.textContent = '24°C';
-}
-fetchWeather();
-
-console.log('AgroNexus loaded successfully!');
+console.log('AgroNexus loaded successfully - Loader hidden!');
 </script>
 </body>
 </html>
