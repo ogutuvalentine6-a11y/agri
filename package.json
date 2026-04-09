@@ -2,10 +2,10 @@
   "name": "agronexus",
   "version": "1.0.0",
   "description": "AgroNexus - Smart Farming Platform",
-  "main": "api.js",
+  "main": "api/index.js",
   "scripts": {
     "dev": "vercel dev",
-    "start": "node api.js"
+    "start": "node api/index.js"
   },
   "dependencies": {
     "express": "^4.18.2",
