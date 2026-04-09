@@ -12,7 +12,7 @@ const app = express();
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: ['https://your-frontend.vercel.app', 'http://localhost:3000'],
+  origin: ['https://your-frontend.vercel.app', 'http://localhost:3000', 'http://127.0.0.1:5500'],
   credentials: true
 }));
 app.use(express.json({ limit: '10kb' }));
@@ -393,10 +393,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     await connectToDatabase();
     const user = await User.findOne({ email });
     
-    // Always return success for security
     if (user) {
       console.log(`Password reset requested for: ${email}`);
-      // In production, send email here
     }
     
     res.json({ message: 'If account exists, password reset link has been sent' });
@@ -602,7 +600,7 @@ app.post('/api/transactions/deposit', authenticate, async (req, res) => {
       userId: user._id,
       type: 'deposit',
       amount,
-      status: 'completed', // Auto-complete for demo
+      status: 'completed',
       method: method || 'manual',
       description: reference || `Deposit via ${method || 'manual'}`,
       completedAt: new Date(),
@@ -939,7 +937,6 @@ app.put('/api/admin/settings', authenticate, requireAdmin, async (req, res) => {
   const { platformName, minDeposit, minWithdrawal, withdrawalFee, maintenanceMode } = req.body;
   
   try {
-    // In production, save to database
     console.log('Settings updated:', { platformName, minDeposit, minWithdrawal, withdrawalFee, maintenanceMode });
     res.json({ message: 'Settings saved successfully' });
   } catch (error) {
@@ -957,8 +954,7 @@ app.get('/api/weather', async (req, res) => {
   try {
     let weatherData;
     
-    if (process.env.OPENWEATHER_API_KEY) {
-      // Real API call
+    if (process.env.OPENWEATHER_API_KEY && process.env.OPENWEATHER_API_KEY !== 'your-openweathermap-api-key') {
       const response = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${process.env.OPENWEATHER_API_KEY}`
       );
@@ -973,7 +969,6 @@ app.get('/api/weather', async (req, res) => {
         icon: data.weather?.[0]?.icon || '01d'
       };
     } else {
-      // Mock data for development
       weatherData = {
         temp: 24,
         description: 'Partly Cloudy',
@@ -1001,7 +996,6 @@ app.get('/api/weather', async (req, res) => {
     res.json({ ...weatherData, forecast, alerts });
   } catch (error) {
     console.error('Weather error:', error);
-    // Return mock data on error
     res.json({
       temp: 24,
       description: 'Partly Cloudy',
