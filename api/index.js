@@ -1,5 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
@@ -9,85 +11,75 @@ require('dotenv').config();
 
 const app = express();
 
-// 1. Critical Environment Check
-const requiredEnv = ['MONGODB_URI', 'JWT_SECRET', 'REFRESH_TOKEN_SECRET'];
-requiredEnv.forEach(key => {
-    if (!process.env[key]) {
-        console.error(`CRITICAL ERROR: ${key} is not defined in environment variables.`);
-        process.exit(1);
-    }
-});
-
-// 2. Middleware
-app.use(helmet({
-    contentSecurityPolicy: false, // Set to false if loading external fonts/scripts easily
-}));
-
+// Security and Middleware
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000'],
+  origin: ['https://agri-gamma-red.vercel.app', 'http://localhost:3000', 'http://127.0.0.1:5500'],
   credentials: true
 }));
-
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 
-// 3. Static Files (Improved for Vercel)
-// This serves everything from a 'public' folder at the root
-app.use(express.static(path.join(__dirname, '../public')));
-
-// 4. Rate Limiting (Applied to API only)
+// Rate limiting to prevent abuse
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { status: 'error', message: 'Too many requests, please try again later.' }
+  message: { message: 'Too many requests, please try again later.' }
 });
 app.use('/api/', limiter);
 
-// 5. Database Connection
+// Serve static files from the "public" directory
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Database Connection Logic
 let isConnected = false;
 async function connectToDatabase() {
   if (isConnected) return;
   try {
+    if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is missing');
     await mongoose.connect(process.env.MONGODB_URI);
     isConnected = true;
     console.log("Connected to MongoDB");
-  } catch (error) {
-    console.error('Database connection error:', error);
+  } catch (err) {
+    console.error("DB Connection Error:", err);
   }
 }
 
-// 6. Token Verification Helper (Refactored)
-const verifyToken = (token, secret) => {
-    try {
-        return jwt.verify(token, secret);
-    } catch (err) {
-        return { error: err.name }; // Returns specific error type (e.g., TokenExpiredError)
-    }
+// Token Verification Utilities
+const verifyAccessToken = (token) => {
+  try { return jwt.verify(token, process.env.JWT_SECRET); } 
+  catch (e) { return null; }
 };
 
-// --- ROUTES ---
+// --- API ROUTES ---
 
-// Example Weather API Route
+app.get('/api/health', (req, res) => res.json({ status: 'up' }));
+
 app.get('/api/weather', async (req, res) => {
-  try {
-    // In production, fetch from a real API like OpenWeather
-    res.json({
-      temp: 24,
-      description: 'Partly Cloudy',
-      humidity: 72,
-      forecast: [
-        { day: 'Mon', high: 27, low: 18, icon: '☀️' },
-        { day: 'Tue', high: 20, low: 15, icon: '🌧️' }
-      ]
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error fetching weather" });
-  }
+  await connectToDatabase();
+  // Placeholder weather data
+  res.json({
+    temp: 24,
+    description: 'Partly Cloudy',
+    humidity: 72,
+    forecast: [
+      { day: 'Mon', high: 27, low: 18, icon: '☀️' },
+      { day: 'Tue', high: 20, low: 15, icon: '🌧️' }
+    ]
+  });
 });
 
-// Catch-all for Frontend (SPA Mode)
+// Admin Settings Route
+app.put('/api/admin/settings', async (req, res) => {
+  const token = req.cookies.accessToken;
+  const user = verifyAccessToken(token);
+  if (!user || user.role !== 'admin') return res.status(403).json({ message: 'Unauthorized' });
+  
+  // Logic to save settings to DB would go here
+  res.json({ message: 'Settings updated successfully' });
+});
+
+// Catch-all: Send user to index.html for any non-API route
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
@@ -95,11 +87,8 @@ app.get('*', (req, res) => {
 // Export for Vercel
 module.exports = app;
 
-// Local development listener
+// Local Server Start
 if (require.main === module) {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-        connectToDatabase();
-        console.log(`Server running on port ${PORT}`);
-    });
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`Server on port ${PORT}`));
 }
