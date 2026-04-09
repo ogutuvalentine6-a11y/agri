@@ -1,7 +1,7 @@
 {
-  "name": "agronexus-backend",
+  "name": "agronexus",
   "version": "1.0.0",
-  "description": "AgroNexus API - Smart Farming Platform",
+  "description": "AgroNexus - Smart Farming Platform",
   "main": "api.js",
   "scripts": {
     "dev": "vercel dev",
