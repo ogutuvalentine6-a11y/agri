@@ -395,9 +395,13 @@ footer{
 #loading{
   position:fixed;inset:0;background:var(--soil);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  z-index:9999;transition:opacity .5s,visibility .5s;
+  z-index:9999;transition:opacity 0.5s, visibility 0.5s;
 }
-#loading.hide{opacity:0;visibility:hidden;}
+#loading.hide{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
 .loader-logo{
   font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:900;
   color:var(--sprout);margin-bottom:1.5rem;
@@ -817,27 +821,34 @@ footer{
 </footer>
 
 <script>
-/* ─── CONFIG ─── */
-// Use relative path for API (will work when backend is added later)
-const API = '/api';
+/* ─── FIXED SCRIPT - NO BACKEND DEPENDENCY ─── */
 
-// Mock user for demo - remove this when backend is ready
-const MOCK_MODE = true;
+// Hide loader immediately when page is ready
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    var loader = document.getElementById('loading');
+    if (loader) {
+      loader.classList.add('hide');
+    }
+  }, 500);
+});
 
-/* ─── LOADER ─── */
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    const loader = document.getElementById('loading');
-    if (loader) loader.classList.add('hide');
-  }, 800);
+// Also hide on full load
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    var loader = document.getElementById('loading');
+    if (loader) {
+      loader.classList.add('hide');
+    }
+  }, 300);
 });
 
 /* ─── TABS ─── */
 function showTab(t) {
-  const loginForm = document.getElementById('form-login');
-  const registerForm = document.getElementById('form-register');
-  const loginTab = document.getElementById('tab-login');
-  const registerTab = document.getElementById('tab-register');
+  var loginForm = document.getElementById('form-login');
+  var registerForm = document.getElementById('form-register');
+  var loginTab = document.getElementById('tab-login');
+  var registerTab = document.getElementById('tab-register');
   
   if (loginForm && registerForm) {
     loginForm.style.display = t === 'login' ? 'block' : 'none';
@@ -855,23 +866,21 @@ function showTab(t) {
 }
 
 /* ─── TOAST ─── */
-function showToast(msg, type = 'success') {
-  let toast = document.getElementById('toast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'toast';
-    toast.innerHTML = '<i class="fas fa-check-circle"></i><span id="toast-msg"></span>';
-    document.body.appendChild(toast);
-  }
-  const toastMsg = document.getElementById('toast-msg');
+function showToast(msg, type) {
+  var toast = document.getElementById('toast');
+  var toastMsg = document.getElementById('toast-msg');
+  if (!toastMsg) return;
+  
+  toastMsg.textContent = msg;
   toast.className = type === 'error' ? 'error' : '';
-  if (toastMsg) toastMsg.textContent = msg;
   toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 3500);
+  setTimeout(function() {
+    toast.classList.remove('show');
+  }, 3500);
 }
 
 function setMsg(id, msg, type) {
-  const el = document.getElementById(id);
+  var el = document.getElementById(id);
   if (el) {
     el.textContent = msg;
     el.className = 'msg show ' + type;
@@ -879,7 +888,7 @@ function setMsg(id, msg, type) {
 }
 
 function clearMsg(id) {
-  const el = document.getElementById(id);
+  var el = document.getElementById(id);
   if (el) el.className = 'msg';
 }
 
@@ -888,16 +897,12 @@ function validateEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
-function validatePassword(p) {
-  return p.length >= 8;
-}
-
-/* ─── MOCK LOGIN (for testing) ─── */
-async function doLogin() {
+/* ─── DEMO LOGIN (works without backend) ─── */
+function doLogin() {
   clearMsg('login-msg');
   
-  const email = document.getElementById('login-email')?.value.trim();
-  const password = document.getElementById('login-pass')?.value;
+  var email = document.getElementById('login-email')?.value.trim();
+  var password = document.getElementById('login-pass')?.value;
   
   if (!email || !password) {
     setMsg('login-msg', 'Please fill in all fields.', 'error');
@@ -909,43 +914,43 @@ async function doLogin() {
     return;
   }
   
-  const btn = document.querySelector('#form-login .btn-submit');
+  var btn = document.querySelector('#form-login .btn-submit');
   if (btn) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating…';
     btn.disabled = true;
   }
   
-  // Mock authentication - redirect based on email
-  setTimeout(() => {
-    if (email === 'admin@agronexus.com' || email === 'admin@example.com') {
+  // Demo authentication
+  setTimeout(function() {
+    if (email === 'admin@agronexus.com') {
       showToast('Welcome Admin! Redirecting...', 'success');
-      setTimeout(() => {
+      setTimeout(function() {
         window.location.href = 'admin.html';
-      }, 1000);
+      }, 800);
     } else {
       showToast('Welcome to AgroNexus! Redirecting...', 'success');
-      setTimeout(() => {
+      setTimeout(function() {
         window.location.href = 'user.html';
-      }, 1000);
+      }, 800);
     }
     
     if (btn) {
       btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In Securely';
       btn.disabled = false;
     }
-  }, 1000);
+  }, 800);
 }
 
-/* ─── MOCK REGISTER ─── */
-async function doRegister() {
+/* ─── DEMO REGISTER ─── */
+function doRegister() {
   clearMsg('reg-msg');
   
-  const name = document.getElementById('reg-name')?.value.trim();
-  const email = document.getElementById('reg-email')?.value.trim();
-  const phone = document.getElementById('reg-phone')?.value.trim();
-  const location = document.getElementById('reg-location')?.value.trim();
-  const pass = document.getElementById('reg-pass')?.value;
-  const pass2 = document.getElementById('reg-pass2')?.value;
+  var name = document.getElementById('reg-name')?.value.trim();
+  var email = document.getElementById('reg-email')?.value.trim();
+  var phone = document.getElementById('reg-phone')?.value.trim();
+  var location = document.getElementById('reg-location')?.value.trim();
+  var pass = document.getElementById('reg-pass')?.value;
+  var pass2 = document.getElementById('reg-pass2')?.value;
   
   if (!name || !email || !phone || !location || !pass || !pass2) {
     setMsg('reg-msg', 'All fields are required.', 'error');
@@ -957,7 +962,7 @@ async function doRegister() {
     return;
   }
   
-  if (!validatePassword(pass)) {
+  if (pass.length < 8) {
     setMsg('reg-msg', 'Password must be at least 8 characters.', 'error');
     return;
   }
@@ -967,16 +972,17 @@ async function doRegister() {
     return;
   }
   
-  const btn = document.querySelector('#form-register .btn-submit');
+  var btn = document.querySelector('#form-register .btn-submit');
   if (btn) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account…';
     btn.disabled = true;
   }
   
-  // Mock registration
-  setTimeout(() => {
+  setTimeout(function() {
     showToast('Account created! Please sign in. 🌱', 'success');
-    setTimeout(() => showTab('login'), 1500);
+    setTimeout(function() {
+      showTab('login');
+    }, 1500);
     
     if (btn) {
       btn.innerHTML = '<i class="fas fa-seedling"></i> Create My Account';
@@ -987,7 +993,7 @@ async function doRegister() {
 
 /* ─── FORGOT PASSWORD ─── */
 function showForgot() {
-  const email = prompt('Enter your registered email address:');
+  var email = prompt('Enter your registered email address:');
   if (email && validateEmail(email)) {
     showToast('Password reset link sent to ' + email, 'success');
   } else if (email) {
@@ -995,43 +1001,25 @@ function showForgot() {
   }
 }
 
-/* ─── WEATHER (mock data - works without API) ─── */
-async function fetchWeather() {
-  // Mock weather data - no API call needed
-  const weatherData = {
-    temp: 24,
-    description: 'Partly Cloudy',
-    humidity: 72,
-    wind: 12,
-    feelsLike: 22,
-    icon: '⛅'
-  };
-  
-  const tempEl = document.getElementById('wtemp');
-  if (tempEl) tempEl.textContent = `${weatherData.temp}°C`;
-  
-  const tempDashEl = document.getElementById('dash-temp');
-  if (tempDashEl) tempDashEl.textContent = `${weatherData.temp}°C`;
-}
-
 /* ─── SCROLL REVEAL ─── */
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(e => {
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
     if (e.isIntersecting) e.target.classList.add('visible');
   });
 }, { threshold: 0.1 });
 
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+document.querySelectorAll('.reveal').forEach(function(el) {
+  observer.observe(el);
+});
 
-/* ─── INIT ─── */
-// Run weather fetch on page load
+/* ─── MOCK WEATHER ─── */
+function fetchWeather() {
+  var tempEl = document.getElementById('wtemp');
+  if (tempEl) tempEl.textContent = '24°C';
+}
 fetchWeather();
 
-// Make sure loader hides
-window.addEventListener('load', () => {
-  const loader = document.getElementById('loading');
-  if (loader) setTimeout(() => loader.classList.add('hide'), 500);
-});
+console.log('AgroNexus loaded successfully!');
 </script>
 </body>
 </html>
