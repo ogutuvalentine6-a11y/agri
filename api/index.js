@@ -10,7 +10,7 @@ const path = require('path');
 
 const app = express();
 
-// Middleware
+// Midleware
 app.use(helmet());
 app.use(cors({
   origin: ['https://agri-gamma-red.vercel.app', 'http://localhost:3000', 'http://127.0.0.1:5500'],
