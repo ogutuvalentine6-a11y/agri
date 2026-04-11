@@ -139,6 +139,12 @@ nav{
 }
 .stat-lbl{color:var(--ash);font-size:.8rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;}
 
+/* ─── HERO LEFT ─── */
+.hero-left{
+  position:relative;
+  z-index:1;
+}
+
 /* ─── AUTH CARD ─── */
 .auth-card{
   background:rgba(247,242,232,.04);
@@ -147,6 +153,7 @@ nav{
   padding:2.5rem;
   backdrop-filter:blur(30px);
   position:relative;
+  z-index:1;
   overflow:hidden;
 }
 .auth-card::before{
@@ -831,11 +838,11 @@ function validateEmail(e) {
 // ─── LOGIN ───
 async function doLogin() {
   clearMsg('login-msg');
-  var email = (document.getElementById('login-email')?.value || '').trim();
-  var pass  =  document.getElementById('login-pass')?.value  || '';
+  var email = (document.getElementById('login-email').value || '').trim();
+  var pass  =  document.getElementById('login-pass').value  || '';
 
-  if (!email || !pass)          { setMsg('login-msg', 'Please fill in all fields.'); return; }
-  if (!validateEmail(email))    { setMsg('login-msg', 'Enter a valid email address.'); return; }
+  if (!email || !pass)       { setMsg('login-msg', 'Please fill in all fields.', 'error'); return; }
+  if (!validateEmail(email)) { setMsg('login-msg', 'Enter a valid email address.', 'error'); return; }
 
   var btn = document.querySelector('#form-login .btn-submit');
   if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating…'; btn.disabled = true; }
@@ -847,7 +854,7 @@ async function doLogin() {
       body: JSON.stringify({ email: email, password: pass })
     });
     var data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Login failed');
+    if (!res.ok) throw new Error(data.message || 'Invalid email or password');
 
     window._authToken = data.accessToken;
     showToast('Welcome, ' + data.user.name + '! Redirecting…', 'success');
@@ -855,7 +862,11 @@ async function doLogin() {
       window.location.href = data.user.role === 'admin' ? 'admin.html' : 'user.html';
     }, 700);
   } catch (e) {
-    setMsg('login-msg', e.message || 'Login failed. Please try again.');
+    var msg = e.message;
+    if (!msg || msg === 'Failed to fetch' || msg.includes('NetworkError')) {
+      msg = 'Cannot reach server. Make sure the app is running.';
+    }
+    setMsg('login-msg', msg, 'error');
     if (btn) { btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In Securely'; btn.disabled = false; }
   }
 }
@@ -863,17 +874,17 @@ async function doLogin() {
 // ─── REGISTER ───
 async function doRegister() {
   clearMsg('reg-msg');
-  var name     = (document.getElementById('reg-name')?.value     || '').trim();
-  var email    = (document.getElementById('reg-email')?.value    || '').trim();
-  var phone    = (document.getElementById('reg-phone')?.value    || '').trim();
-  var location = (document.getElementById('reg-location')?.value || '').trim();
-  var pass     =  document.getElementById('reg-pass')?.value     || '';
-  var pass2    =  document.getElementById('reg-pass2')?.value    || '';
+  var name     = (document.getElementById('reg-name').value     || '').trim();
+  var email    = (document.getElementById('reg-email').value    || '').trim();
+  var phone    = (document.getElementById('reg-phone').value    || '').trim();
+  var location = (document.getElementById('reg-location').value || '').trim();
+  var pass     =  document.getElementById('reg-pass').value     || '';
+  var pass2    =  document.getElementById('reg-pass2').value    || '';
 
-  if (!name || !email || !phone || !location || !pass || !pass2) { setMsg('reg-msg', 'All fields are required.'); return; }
-  if (!validateEmail(email))  { setMsg('reg-msg', 'Invalid email format.'); return; }
-  if (pass.length < 8)        { setMsg('reg-msg', 'Password must be at least 8 characters.'); return; }
-  if (pass !== pass2)         { setMsg('reg-msg', 'Passwords do not match.'); return; }
+  if (!name || !email || !phone || !location || !pass || !pass2) { setMsg('reg-msg', 'All fields are required.', 'error'); return; }
+  if (!validateEmail(email))  { setMsg('reg-msg', 'Invalid email format.', 'error'); return; }
+  if (pass.length < 8)        { setMsg('reg-msg', 'Password must be at least 8 characters.', 'error'); return; }
+  if (pass !== pass2)         { setMsg('reg-msg', 'Passwords do not match.', 'error'); return; }
 
   var btn = document.querySelector('#form-register .btn-submit');
   if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account…'; btn.disabled = true; }
@@ -888,13 +899,16 @@ async function doRegister() {
     if (!res.ok) throw new Error(data.message || 'Registration failed');
 
     showToast('Account created! Please sign in. 🌱', 'success');
-    // Clear register form
     ['reg-name','reg-email','reg-phone','reg-location','reg-pass','reg-pass2'].forEach(function(id) {
       var el = document.getElementById(id); if (el) el.value = '';
     });
     setTimeout(function() { showTab('login'); }, 900);
   } catch (e) {
-    setMsg('reg-msg', e.message || 'Registration failed. Please try again.');
+    var msg = e.message;
+    if (!msg || msg === 'Failed to fetch' || msg.includes('NetworkError')) {
+      msg = 'Cannot reach server. Make sure the app is running.';
+    }
+    setMsg('reg-msg', msg, 'error');
   } finally {
     if (btn) { btn.innerHTML = '<i class="fas fa-seedling"></i> Create My Account'; btn.disabled = false; }
   }
