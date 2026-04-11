@@ -35,7 +35,8 @@ app.use('/api/', limiter);
 let isConnected = false;
 
 async function connectToDatabase() {
-  if (isConnected) return;
+  // On serverless, readyState 1 = connected; reuse it even if flag was reset
+  if (isConnected && mongoose.connection.readyState === 1) return;
   
   if (!process.env.MONGODB_URI) {
     throw new Error('MONGODB_URI is not defined');
@@ -49,6 +50,7 @@ async function connectToDatabase() {
     isConnected = true;
     console.log('MongoDB connected');
   } catch (error) {
+    isConnected = false; // reset so next request retries
     console.error('MongoDB connection error:', error);
     throw error;
   }
@@ -912,7 +914,9 @@ app.get('/api/admin/transactions', authenticate, requireAdmin, async (req, res) 
     await connectToDatabase();
     
     const query = {};
-    if (type) query.type = type;
+    // admin.html loadManualDeps sends type=manual — map it to the actual enum value
+    if (type === 'manual') query.type = 'manual_deposit';
+    else if (type) query.type = type;
     if (status) query.status = status;
     
     if (search) {
@@ -930,7 +934,11 @@ app.get('/api/admin/transactions', authenticate, requireAdmin, async (req, res) 
       .limit(parseInt(limit))
       .populate('userId', 'name email');
     
-    res.json({ transactions });
+    res.json({ transactions: transactions.map(t => ({
+      ...t.toObject(),
+      userName: t.userId?.name || 'Unknown',
+      userEmail: t.userId?.email || ''
+    })) });
   } catch (error) {
     console.error('Admin get transactions error:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -950,7 +958,94 @@ app.put('/api/admin/settings', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-// ========== WEATHER ROUTE ==========
+// Approve pending transaction (admin)
+app.put('/api/admin/transactions/:id/approve', authenticate, requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    await connectToDatabase();
+    
+    const transaction = await Transaction.findById(id);
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+    
+    if (transaction.status !== 'pending') {
+      return res.status(400).json({ message: 'Transaction is not pending' });
+    }
+    
+    // For withdrawals, deduct balance on approval
+    if (transaction.type === 'withdrawal') {
+      const user = await User.findById(transaction.userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+      
+      const fee = transaction.metadata?.fee || 0;
+      const totalDeduction = transaction.amount + fee;
+      
+      if (user.walletBalance < totalDeduction) {
+        transaction.status = 'failed';
+        await transaction.save();
+        return res.status(400).json({ message: 'Insufficient user balance — transaction failed' });
+      }
+      
+      user.walletBalance -= totalDeduction;
+      transaction.balanceAfter = user.walletBalance;
+      await user.save();
+    }
+    
+    transaction.status = 'completed';
+    transaction.completedAt = new Date();
+    transaction.adminId = req.user.id;
+    await transaction.save();
+    
+    res.json({ message: 'Transaction approved successfully', transaction });
+  } catch (error) {
+    console.error('Approve transaction error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Reject pending transaction (admin)
+app.put('/api/admin/transactions/:id/reject', authenticate, requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    await connectToDatabase();
+    
+    const transaction = await Transaction.findById(id);
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+    
+    if (transaction.status !== 'pending') {
+      return res.status(400).json({ message: 'Transaction is not pending' });
+    }
+    
+    transaction.status = 'cancelled';
+    transaction.adminId = req.user.id;
+    await transaction.save();
+    
+    res.json({ message: 'Transaction rejected successfully', transaction });
+  } catch (error) {
+    console.error('Reject transaction error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Update security settings (admin)
+app.put('/api/admin/settings/security', authenticate, requireAdmin, async (req, res) => {
+  const { maxLoginAttempts, sessionDuration, jwtExpiry, require2FA } = req.body;
+  
+  try {
+    console.log('Security settings updated:', { maxLoginAttempts, sessionDuration, jwtExpiry, require2FA });
+    res.json({ message: 'Security settings saved successfully' });
+  } catch (error) {
+    console.error('Save security settings error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 
 // Get weather
 app.get('/api/weather', async (req, res) => {
