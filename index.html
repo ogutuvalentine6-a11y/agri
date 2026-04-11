@@ -391,36 +391,6 @@ footer{
 }
 .footer-socials a:hover{background:var(--moss);color:var(--white);}
 
-/* ─── LOADING OVERLAY ─── */
-#loading{
-  position:fixed;inset:0;background:var(--soil);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  z-index:9999;
-  opacity:1;visibility:visible;
-  transition:opacity 0.5s ease, visibility 0.5s ease;
-}
-#loading.hide{
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-}
-.loader-logo{
-  font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:900;
-  color:var(--sprout);margin-bottom:.75rem;
-  display:flex;align-items:center;gap:.75rem;
-}
-.loader-sub{
-  color:var(--ash);font-size:.85rem;margin-bottom:2rem;letter-spacing:.08em;text-transform:uppercase;
-}
-.loader-bar{
-  width:220px;height:3px;background:rgba(247,242,232,.1);border-radius:50px;overflow:hidden;
-}
-.loader-fill{
-  height:100%;width:0%;background:linear-gradient(90deg,var(--sprout),var(--harvest));
-  border-radius:50px;
-  transition:width 0.9s cubic-bezier(.4,0,.2,1);
-}
-
 /* ─── SCROLL REVEAL ─── */
 .reveal{opacity:0;transform:translateY(30px);transition:opacity .6s,transform .6s;}
 .reveal.visible{opacity:1;transform:none;}
@@ -454,37 +424,9 @@ footer{
   nav .nav-links{display:none;}
 }
 </style>
-<script>
-// Runs in <head> — before any body content is painted.
-// We hook window.onload so the loader is visible the whole time
-// assets are fetching, then we animate the bar and fade out.
-window._loaderStart = Date.now();
-window.addEventListener('load', function() {
-  var fill   = document.getElementById('loader-fill');
-  var loader = document.getElementById('loading');
-  if (!fill || !loader) return;
-
-  // Force a reflow so width:0% is committed before we set 100%
-  fill.getBoundingClientRect();
-  fill.style.width = '100%';
-
-  // Wait for bar transition (900ms) + small pause, then fade out
-  var elapsed = Date.now() - window._loaderStart;
-  var remaining = Math.max(0, 1000 - elapsed); // ensure at least 1s total visible
-  setTimeout(function() {
-    loader.classList.add('hide');
-  }, remaining + 200);
-});
-</script>
 </head>
 <body>
 
-<!-- LOADER -->
-<div id="loading">
-  <div class="loader-logo"><i class="fas fa-seedling" style="color:var(--harvest);font-size:2rem;"></i> ValmapsAgro</div>
-  <div class="loader-sub">Smart Farming Platform</div>
-  <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
-</div>
 
 <!-- Toast -->
 <div id="toast"><i class="fas fa-check-circle"></i><span id="toast-msg"></span></div>
