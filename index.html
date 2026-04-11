@@ -455,8 +455,8 @@ footer{
 </head>
 <body>
 
-<!-- LOADER - WILL BE HIDDEN IMMEDIATELY BY JAVASCRIPT -->
-<div id="loading">
+<!-- LOADER - hidden by default; only shown programmatically if needed -->
+<div id="loading" class="hide">
   <div class="loader-logo">🌿 ValmapsAgro</div>
   <div class="loader-bar"><div class="loader-fill"></div></div>
 </div>
@@ -830,24 +830,6 @@ footer{
 // No backend required - works immediately!
 // ============================================
 
-// HIDE LOADER IMMEDIATELY - FIXED!
-(function hideLoader() {
-  var loader = document.getElementById('loading');
-  if (loader) {
-    loader.classList.add('hide');
-  }
-})();
-
-// Also hide on DOM ready just in case
-document.addEventListener('DOMContentLoaded', function() {
-  var loader = document.getElementById('loading');
-  if (loader) {
-    setTimeout(function() {
-      loader.classList.add('hide');
-    }, 100);
-  }
-});
-
 /* ─── TABS ─── */
 function showTab(t) {
   var loginForm = document.getElementById('form-login');
@@ -902,8 +884,8 @@ function validateEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
-/* ─── DEMO LOGIN (works immediately) ─── */
-function doLogin() {
+/* ─── LOGIN ─── */
+async function doLogin() {
   clearMsg('login-msg');
   
   var email = document.getElementById('login-email')?.value.trim();
@@ -920,34 +902,32 @@ function doLogin() {
   }
   
   var btn = document.querySelector('#form-login .btn-submit');
-  if (btn) {
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating…';
-    btn.disabled = true;
-  }
+  if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating…'; btn.disabled = true; }
   
-  // Demo authentication - redirects immediately
-  setTimeout(function() {
-    if (email === 'admin@agronexus.com') {
-      showToast('Welcome Admin! Redirecting...', 'success');
-      setTimeout(function() {
-        window.location.href = 'admin.html';
-      }, 500);
-    } else {
-      showToast('Welcome to AgroNexus! Redirecting...', 'success');
-      setTimeout(function() {
-        window.location.href = 'user.html';
-      }, 500);
-    }
+  try {
+    var res = await fetch('/api/auth/login', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Login failed');
     
-    if (btn) {
-      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In Securely';
-      btn.disabled = false;
-    }
-  }, 500);
+    // Store token for the destination page
+    window._authToken = data.accessToken;
+    showToast('Welcome back, ' + data.user.name + '! Redirecting…', 'success');
+    setTimeout(function() {
+      window.location.href = data.user.role === 'admin' ? 'admin.html' : 'user.html';
+    }, 600);
+  } catch (e) {
+    setMsg('login-msg', e.message, 'error');
+    if (btn) { btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In Securely'; btn.disabled = false; }
+  }
 }
 
-/* ─── DEMO REGISTER ─── */
-function doRegister() {
+/* ─── REGISTER ─── */
+async function doRegister() {
   clearMsg('reg-msg');
   
   var name = document.getElementById('reg-name')?.value.trim();
@@ -961,39 +941,29 @@ function doRegister() {
     setMsg('reg-msg', 'All fields are required.', 'error');
     return;
   }
-  
-  if (!validateEmail(email)) {
-    setMsg('reg-msg', 'Invalid email format.', 'error');
-    return;
-  }
-  
-  if (pass.length < 8) {
-    setMsg('reg-msg', 'Password must be at least 8 characters.', 'error');
-    return;
-  }
-  
-  if (pass !== pass2) {
-    setMsg('reg-msg', 'Passwords do not match.', 'error');
-    return;
-  }
+  if (!validateEmail(email)) { setMsg('reg-msg', 'Invalid email format.', 'error'); return; }
+  if (pass.length < 8) { setMsg('reg-msg', 'Password must be at least 8 characters.', 'error'); return; }
+  if (pass !== pass2) { setMsg('reg-msg', 'Passwords do not match.', 'error'); return; }
   
   var btn = document.querySelector('#form-register .btn-submit');
-  if (btn) {
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account…';
-    btn.disabled = true;
-  }
+  if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account…'; btn.disabled = true; }
   
-  setTimeout(function() {
-    showToast('Account created! Please sign in. 🌱', 'success');
-    setTimeout(function() {
-      showTab('login');
-    }, 1000);
+  try {
+    var res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, location, password: pass })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Registration failed');
     
-    if (btn) {
-      btn.innerHTML = '<i class="fas fa-seedling"></i> Create My Account';
-      btn.disabled = false;
-    }
-  }, 800);
+    showToast('Account created! Please sign in. 🌱', 'success');
+    setTimeout(function() { showTab('login'); }, 1000);
+    if (btn) { btn.innerHTML = '<i class="fas fa-seedling"></i> Create My Account'; btn.disabled = false; }
+  } catch (e) {
+    setMsg('reg-msg', e.message, 'error');
+    if (btn) { btn.innerHTML = '<i class="fas fa-seedling"></i> Create My Account'; btn.disabled = false; }
+  }
 }
 
 /* ─── FORGOT PASSWORD ─── */
