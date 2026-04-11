@@ -545,16 +545,32 @@ async function init(){
     }catch(e){window.location.href='index.html';return;}
   }
   if(!_admin){
-    try{const r=await authFetch('/users/me');_admin=await r.json();}catch{}
+    try{const r=await authFetch('/users/me'); const u=await r.json(); if(r.ok) _admin=u;}catch{}
   }
-  if(_admin&&_admin.role!=='admin'){window.location.href='user.html';return;}
+  if(!_admin || _admin.role!=='admin' || _admin.isActive===false){window.location.href=(_admin&&_admin.role==='user'?'user.html':'index.html');return;}
   populateAdmin();
   document.getElementById('admin-date').textContent=new Date().toLocaleDateString('en-KE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   loadOverview();
 }
 
-function authFetch(path,opts={}){
-  return fetch(API+path,{...opts,credentials:'include',headers:{'Content-Type':'application/json','Authorization':`Bearer ${_token}`,...(opts.headers||{})}});
+function authFetch(path, opts = {}, _retry = true) {
+  return fetch(API + path, {
+    ...opts,
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_token}`, ...(opts.headers || {}) }
+  }).then(async res => {
+    if (res.status === 401 && _retry) {
+      try {
+        const r = await fetch(`${API}/auth/refresh`, { method: 'POST', credentials: 'include' });
+        if (!r.ok) { window.location.href = 'index.html'; return res; }
+        const d = await r.json();
+        if (d.user?.role !== 'admin') { window.location.href = 'user.html'; return res; }
+        _token = d.accessToken; _admin = d.user;
+        return authFetch(path, opts, false);
+      } catch { window.location.href = 'index.html'; return res; }
+    }
+    return res;
+  });
 }
 
 function populateAdmin(){
