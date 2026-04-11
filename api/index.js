@@ -556,13 +556,20 @@ app.put('/api/users/change-password', authenticate, async (req, res) => {
 
 // Get transactions
 app.get('/api/transactions', authenticate, async (req, res) => {
-  const { type, limit = 50, page = 1 } = req.query;
+  const { type, limit = 50, page = 1, month } = req.query;
   
   try {
     await connectToDatabase();
     
     const query = { userId: req.user.id };
     if (type && type !== 'all') query.type = type;
+    // month format: "YYYY-MM" — filter to that calendar month
+    if (month) {
+      const [y, m] = month.split('-').map(Number);
+      const start = new Date(y, m - 1, 1);
+      const end   = new Date(y, m, 1);
+      query.createdAt = { $gte: start, $lt: end };
+    }
     
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
