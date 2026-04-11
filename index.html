@@ -454,6 +454,28 @@ footer{
   nav .nav-links{display:none;}
 }
 </style>
+<script>
+// Runs in <head> — before any body content is painted.
+// We hook window.onload so the loader is visible the whole time
+// assets are fetching, then we animate the bar and fade out.
+window._loaderStart = Date.now();
+window.addEventListener('load', function() {
+  var fill   = document.getElementById('loader-fill');
+  var loader = document.getElementById('loading');
+  if (!fill || !loader) return;
+
+  // Force a reflow so width:0% is committed before we set 100%
+  fill.getBoundingClientRect();
+  fill.style.width = '100%';
+
+  // Wait for bar transition (900ms) + small pause, then fade out
+  var elapsed = Date.now() - window._loaderStart;
+  var remaining = Math.max(0, 1000 - elapsed); // ensure at least 1s total visible
+  setTimeout(function() {
+    loader.classList.add('hide');
+  }, remaining + 200);
+});
+</script>
 </head>
 <body>
 
@@ -828,26 +850,6 @@ footer{
 </footer>
 
 <script>
-// ─── LOADER SEQUENCE ───
-// Shows bar filling animation, then fades out to reveal the page
-(function() {
-  var fill = document.getElementById('loader-fill');
-  var loader = document.getElementById('loading');
-  if (!fill || !loader) return;
-
-  // Small tick to let the browser paint the loader first (frame 1)
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      // Start filling the bar (CSS transition handles animation over 0.9s)
-      fill.style.width = '100%';
-      // After bar completes + short pause, fade the loader out
-      setTimeout(function() {
-        loader.classList.add('hide');
-      }, 1050);
-    });
-  });
-})();
-
 // ─── TABS ───
 function showTab(t) {
   document.getElementById('form-login').style.display    = t === 'login'    ? 'block' : 'none';
