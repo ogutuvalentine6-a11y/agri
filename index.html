@@ -391,32 +391,34 @@ footer{
 }
 .footer-socials a:hover{background:var(--moss);color:var(--white);}
 
-/* ─── LOADING OVERLAY - FIXED - HIDDEN BY DEFAULT ─── */
+/* ─── LOADING OVERLAY ─── */
 #loading{
   position:fixed;inset:0;background:var(--soil);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   z-index:9999;
-  transition:opacity 0.3s, visibility 0.3s;
+  opacity:1;visibility:visible;
+  transition:opacity 0.5s ease, visibility 0.5s ease;
 }
 #loading.hide{
   opacity:0;
   visibility:hidden;
+  pointer-events:none;
 }
 .loader-logo{
   font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:900;
-  color:var(--sprout);margin-bottom:1.5rem;
+  color:var(--sprout);margin-bottom:.75rem;
+  display:flex;align-items:center;gap:.75rem;
+}
+.loader-sub{
+  color:var(--ash);font-size:.85rem;margin-bottom:2rem;letter-spacing:.08em;text-transform:uppercase;
 }
 .loader-bar{
-  width:200px;height:3px;background:rgba(247,242,232,.1);border-radius:50px;overflow:hidden;
+  width:220px;height:3px;background:rgba(247,242,232,.1);border-radius:50px;overflow:hidden;
 }
 .loader-fill{
-  height:100%;width:100%;background:linear-gradient(90deg,var(--sprout),var(--harvest));
+  height:100%;width:0%;background:linear-gradient(90deg,var(--sprout),var(--harvest));
   border-radius:50px;
-  animation:load 0.8s ease-out;
-}
-@keyframes load{
-  0%{width:0%;}
-  100%{width:100%;}
+  transition:width 0.9s cubic-bezier(.4,0,.2,1);
 }
 
 /* ─── SCROLL REVEAL ─── */
@@ -455,10 +457,11 @@ footer{
 </head>
 <body>
 
-<!-- LOADER - hidden by default; only shown programmatically if needed -->
-<div id="loading" class="hide">
-  <div class="loader-logo">🌿 ValmapsAgro</div>
-  <div class="loader-bar"><div class="loader-fill"></div></div>
+<!-- LOADER -->
+<div id="loading">
+  <div class="loader-logo"><i class="fas fa-seedling" style="color:var(--harvest);font-size:2rem;"></i> ValmapsAgro</div>
+  <div class="loader-sub">Smart Farming Platform</div>
+  <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
 </div>
 
 <!-- Toast -->
@@ -825,169 +828,167 @@ footer{
 </footer>
 
 <script>
-// ============================================
-// AGRO NEXUS - FULLY FUNCTIONAL FRONTEND
-// No backend required - works immediately!
-// ============================================
+// ─── LOADER SEQUENCE ───
+// Shows bar filling animation, then fades out to reveal the page
+(function() {
+  var fill = document.getElementById('loader-fill');
+  var loader = document.getElementById('loading');
+  if (!fill || !loader) return;
 
-/* ─── TABS ─── */
+  // Small tick to let the browser paint the loader first (frame 1)
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      // Start filling the bar (CSS transition handles animation over 0.9s)
+      fill.style.width = '100%';
+      // After bar completes + short pause, fade the loader out
+      setTimeout(function() {
+        loader.classList.add('hide');
+      }, 1050);
+    });
+  });
+})();
+
+// ─── TABS ───
 function showTab(t) {
-  var loginForm = document.getElementById('form-login');
-  var registerForm = document.getElementById('form-register');
-  var loginTab = document.getElementById('tab-login');
-  var registerTab = document.getElementById('tab-register');
-  
-  if (loginForm && registerForm) {
-    loginForm.style.display = t === 'login' ? 'block' : 'none';
-    registerForm.style.display = t === 'register' ? 'block' : 'none';
-  }
-  if (loginTab && registerTab) {
-    if (t === 'login') {
-      loginTab.classList.add('active');
-      registerTab.classList.remove('active');
-    } else {
-      registerTab.classList.add('active');
-      loginTab.classList.remove('active');
-    }
-  }
+  document.getElementById('form-login').style.display    = t === 'login'    ? 'block' : 'none';
+  document.getElementById('form-register').style.display = t === 'register' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active',    t === 'login');
+  document.getElementById('tab-register').classList.toggle('active', t === 'register');
 }
 
-/* ─── TOAST ─── */
+// ─── TOAST ───
 function showToast(msg, type) {
   var toast = document.getElementById('toast');
-  var toastMsg = document.getElementById('toast-msg');
-  if (!toastMsg) return;
-  
-  toastMsg.textContent = msg;
-  toast.className = type === 'error' ? 'error' : '';
-  toast.classList.add('show');
-  setTimeout(function() {
-    toast.classList.remove('show');
-  }, 3500);
+  var span  = document.getElementById('toast-msg');
+  if (!span) return;
+  span.textContent = msg;
+  toast.className  = (type === 'error' ? 'error' : '') + ' show';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function() { toast.classList.remove('show'); }, 3500);
 }
 
+// ─── FORM MESSAGES ───
 function setMsg(id, msg, type) {
   var el = document.getElementById(id);
-  if (el) {
-    el.textContent = msg;
-    el.className = 'msg show ' + type;
-  }
+  if (!el) return;
+  el.textContent = msg;
+  el.className   = 'msg show ' + (type || 'error');
 }
-
 function clearMsg(id) {
   var el = document.getElementById(id);
   if (el) el.className = 'msg';
 }
 
-/* ─── VALIDATION ─── */
+// ─── VALIDATION ───
 function validateEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
-/* ─── LOGIN ─── */
+// ─── LOGIN ───
 async function doLogin() {
   clearMsg('login-msg');
-  
-  var email = document.getElementById('login-email')?.value.trim();
-  var password = document.getElementById('login-pass')?.value;
-  
-  if (!email || !password) {
-    setMsg('login-msg', 'Please fill in all fields.', 'error');
-    return;
-  }
-  
-  if (!validateEmail(email)) {
-    setMsg('login-msg', 'Enter a valid email address.', 'error');
-    return;
-  }
-  
+  var email = (document.getElementById('login-email')?.value || '').trim();
+  var pass  =  document.getElementById('login-pass')?.value  || '';
+
+  if (!email || !pass)          { setMsg('login-msg', 'Please fill in all fields.'); return; }
+  if (!validateEmail(email))    { setMsg('login-msg', 'Enter a valid email address.'); return; }
+
   var btn = document.querySelector('#form-login .btn-submit');
   if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating…'; btn.disabled = true; }
-  
+
   try {
-    var res = await fetch('/api/auth/login', {
-      method: 'POST',
-      credentials: 'include',
+    var res  = await fetch('/api/auth/login', {
+      method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email: email, password: pass })
     });
     var data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Login failed');
-    
-    // Store token for the destination page
+
     window._authToken = data.accessToken;
-    showToast('Welcome back, ' + data.user.name + '! Redirecting…', 'success');
+    showToast('Welcome, ' + data.user.name + '! Redirecting…', 'success');
     setTimeout(function() {
       window.location.href = data.user.role === 'admin' ? 'admin.html' : 'user.html';
-    }, 600);
+    }, 700);
   } catch (e) {
-    setMsg('login-msg', e.message, 'error');
+    setMsg('login-msg', e.message || 'Login failed. Please try again.');
     if (btn) { btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In Securely'; btn.disabled = false; }
   }
 }
 
-/* ─── REGISTER ─── */
+// ─── REGISTER ───
 async function doRegister() {
   clearMsg('reg-msg');
-  
-  var name = document.getElementById('reg-name')?.value.trim();
-  var email = document.getElementById('reg-email')?.value.trim();
-  var phone = document.getElementById('reg-phone')?.value.trim();
-  var location = document.getElementById('reg-location')?.value.trim();
-  var pass = document.getElementById('reg-pass')?.value;
-  var pass2 = document.getElementById('reg-pass2')?.value;
-  
-  if (!name || !email || !phone || !location || !pass || !pass2) {
-    setMsg('reg-msg', 'All fields are required.', 'error');
-    return;
-  }
-  if (!validateEmail(email)) { setMsg('reg-msg', 'Invalid email format.', 'error'); return; }
-  if (pass.length < 8) { setMsg('reg-msg', 'Password must be at least 8 characters.', 'error'); return; }
-  if (pass !== pass2) { setMsg('reg-msg', 'Passwords do not match.', 'error'); return; }
-  
+  var name     = (document.getElementById('reg-name')?.value     || '').trim();
+  var email    = (document.getElementById('reg-email')?.value    || '').trim();
+  var phone    = (document.getElementById('reg-phone')?.value    || '').trim();
+  var location = (document.getElementById('reg-location')?.value || '').trim();
+  var pass     =  document.getElementById('reg-pass')?.value     || '';
+  var pass2    =  document.getElementById('reg-pass2')?.value    || '';
+
+  if (!name || !email || !phone || !location || !pass || !pass2) { setMsg('reg-msg', 'All fields are required.'); return; }
+  if (!validateEmail(email))  { setMsg('reg-msg', 'Invalid email format.'); return; }
+  if (pass.length < 8)        { setMsg('reg-msg', 'Password must be at least 8 characters.'); return; }
+  if (pass !== pass2)         { setMsg('reg-msg', 'Passwords do not match.'); return; }
+
   var btn = document.querySelector('#form-register .btn-submit');
   if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account…'; btn.disabled = true; }
-  
+
   try {
-    var res = await fetch('/api/auth/register', {
+    var res  = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, phone, location, password: pass })
+      body: JSON.stringify({ name: name, email: email, phone: phone, location: location, password: pass })
     });
     var data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Registration failed');
-    
+
     showToast('Account created! Please sign in. 🌱', 'success');
-    setTimeout(function() { showTab('login'); }, 1000);
-    if (btn) { btn.innerHTML = '<i class="fas fa-seedling"></i> Create My Account'; btn.disabled = false; }
+    // Clear register form
+    ['reg-name','reg-email','reg-phone','reg-location','reg-pass','reg-pass2'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    setTimeout(function() { showTab('login'); }, 900);
   } catch (e) {
-    setMsg('reg-msg', e.message, 'error');
+    setMsg('reg-msg', e.message || 'Registration failed. Please try again.');
+  } finally {
     if (btn) { btn.innerHTML = '<i class="fas fa-seedling"></i> Create My Account'; btn.disabled = false; }
   }
 }
 
-/* ─── FORGOT PASSWORD ─── */
-function showForgot() {
+// ─── FORGOT PASSWORD ───
+async function showForgot() {
   var email = prompt('Enter your registered email address:');
-  if (email && validateEmail(email)) {
-    showToast('Password reset link sent to ' + email, 'success');
-  } else if (email) {
-    showToast('Please enter a valid email address', 'error');
-  }
+  if (!email) return;
+  if (!validateEmail(email)) { showToast('Please enter a valid email address', 'error'); return; }
+  try {
+    await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    });
+  } catch (e) {}
+  // Always show the same message for security (don't reveal if email exists)
+  showToast('If that account exists, a reset link has been sent.', 'success');
 }
 
-/* ─── SCROLL REVEAL ─── */
-var observer = new IntersectionObserver(function(entries) {
-  entries.forEach(function(e) {
-    if (e.isIntersecting) e.target.classList.add('visible');
+// ─── ENTER KEY on login ───
+document.addEventListener('DOMContentLoaded', function() {
+  var passField = document.getElementById('login-pass');
+  if (passField) passField.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
   });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.reveal').forEach(function(el) {
-  observer.observe(el);
+  var regPass2 = document.getElementById('reg-pass2');
+  if (regPass2) regPass2.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doRegister();
+  });
 });
 
-console.log('AgroNexus loaded successfully - Loader hidden!');
+// ─── SCROLL REVEAL ───
+var _observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(function(el) { _observer.observe(el); });
 </script>
 </body>
 </html>
