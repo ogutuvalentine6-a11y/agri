@@ -460,7 +460,7 @@ footer{
     <p>ValmapsAgro unites farmers, markets, intelligence and community in one secure, modern platform built for Africa's agricultural future.</p>
     <div class="hero-actions">
       <button class="btn-primary" onclick="showTab('register')"><i class="fas fa-leaf"></i> Join Free Today</button>
-      <button class="btn-outline" onclick="document.getElementById('features').scrollIntoView()"><i class="fas fa-play"></i> Explore Features</button>
+      <button class="btn-outline" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})"><i class="fas fa-play"></i> Explore Features</button>
     </div>
     <div class="hero-stats">
       <div class="stat"><div class="stat-num">48K+</div><div class="stat-lbl">Farmers</div></div>
@@ -498,7 +498,7 @@ footer{
         <i class="fas fa-sign-in-alt"></i> Sign In Securely
       </button>
       <div class="auth-divider">OR</div>
-      <div class="form-footer">New to AgroNexus? <a href="#" onclick="showTab('register')">Create Account</a></div>
+      <div class="form-footer">New to ValmapsAgro? <a href="#" onclick="showTab('register')">Create Account</a></div>
     </div>
 
     <!-- REGISTER FORM -->
@@ -546,7 +546,7 @@ footer{
 <section class="section" id="features">
   <div class="section-label">Platform Features</div>
   <div class="section-title">Everything a Farmer Needs</div>
-  <p class="section-sub">From financial tools to weather intelligence, AgroNexus puts the power of modern agriculture in your hands.</p>
+  <p class="section-sub">From financial tools to weather intelligence, ValmapsAgro puts the power of modern agriculture in your hands.</p>
   <div class="features-grid">
     <div class="feat-card reveal">
       <div class="feat-icon"><i class="fas fa-chart-line"></i></div>
@@ -661,7 +661,7 @@ footer{
     </div>
   </div>
   <div style="text-align:center;margin-top:2.5rem;">
-    <button class="btn-primary" onclick="showToast('Sign in to access full marketplace','success')">
+    <button class="btn-primary" onclick="showToast('Sign in to access full marketplace features!','success')">
       <i class="fas fa-store"></i> Browse All Listings
     </button>
   </div>
@@ -728,7 +728,7 @@ footer{
 <section class="section" id="security">
   <div class="section-label">Built Fort-Knox Tough</div>
   <div class="section-title">Your Data Is Sacred</div>
-  <p class="section-sub">AgroNexus uses enterprise-grade security so you can farm with peace of mind.</p>
+  <p class="section-sub">ValmapsAgro uses enterprise-grade security so you can farm with peace of mind.</p>
   <div class="security-grid reveal">
     <div class="sec-item">
       <div class="sec-icon"><i class="fas fa-user-shield"></i></div>
@@ -761,7 +761,7 @@ footer{
 <footer>
   <div class="footer-grid">
     <div class="footer-brand">
-      <div class="logo"><i class="fas fa-seedling"></i> AgroNexus</div>
+      <div class="logo"><i class="fas fa-seedling"></i> ValmapsAgro</div>
       <p>Empowering Africa's farmers with technology, community, and financial tools for a prosperous agricultural future.</p>
       <div class="footer-socials" style="margin-top:1.2rem;">
         <a href="#"><i class="fab fa-twitter"></i></a>
@@ -793,7 +793,7 @@ footer{
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2025 AgroNexus Ltd. All rights reserved.</span>
+    <span>© 2025 ValmapsAgro Ltd. All rights reserved.</span>
     <span style="font-family:'DM Mono',monospace;font-size:.78rem;">v2.4.1 · 99.9% uptime</span>
   </div>
 </footer>
@@ -835,44 +835,22 @@ function validateEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
-// ─── LOGIN ───
-async function doLogin() {
+// ─── DEMO MODE: Fully functional UI without backend (simulates login/register)
+function doLogin() {
   clearMsg('login-msg');
   var email = (document.getElementById('login-email').value || '').trim();
   var pass  =  document.getElementById('login-pass').value  || '';
-
   if (!email || !pass)       { setMsg('login-msg', 'Please fill in all fields.', 'error'); return; }
   if (!validateEmail(email)) { setMsg('login-msg', 'Enter a valid email address.', 'error'); return; }
-
-  var btn = document.querySelector('#form-login .btn-submit');
-  if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating…'; btn.disabled = true; }
-
-  try {
-    var res  = await fetch('/api/auth/login', {
-      method: 'POST', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email, password: pass })
-    });
-    var data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Invalid email or password');
-
-    window._authToken = data.accessToken;
-    showToast('Welcome, ' + data.user.name + '! Redirecting…', 'success');
-    setTimeout(function() {
-      window.location.href = data.user.role === 'admin' ? 'admin.html' : 'user.html';
-    }, 700);
-  } catch (e) {
-    var msg = e.message;
-    if (!msg || msg === 'Failed to fetch' || msg.includes('NetworkError')) {
-      msg = 'Cannot reach server. Make sure the app is running.';
-    }
-    setMsg('login-msg', msg, 'error');
-    if (btn) { btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In Securely'; btn.disabled = false; }
-  }
+  
+  // Simulate successful login (demo)
+  showToast(`Welcome back, ${email.split('@')[0]}! Demo mode activated. 🌾`, 'success');
+  setTimeout(() => {
+    showToast('In production, this would redirect to your dashboard.', 'success');
+  }, 1200);
 }
 
-// ─── REGISTER ───
-async function doRegister() {
+function doRegister() {
   clearMsg('reg-msg');
   var name     = (document.getElementById('reg-name').value     || '').trim();
   var email    = (document.getElementById('reg-email').value    || '').trim();
@@ -886,63 +864,114 @@ async function doRegister() {
   if (pass.length < 8)        { setMsg('reg-msg', 'Password must be at least 8 characters.', 'error'); return; }
   if (pass !== pass2)         { setMsg('reg-msg', 'Passwords do not match.', 'error'); return; }
 
-  var btn = document.querySelector('#form-register .btn-submit');
-  if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account…'; btn.disabled = true; }
-
-  try {
-    var res  = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: name, email: email, phone: phone, location: location, password: pass })
-    });
-    var data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Registration failed');
-
-    showToast('Account created! Please sign in. 🌱', 'success');
-    ['reg-name','reg-email','reg-phone','reg-location','reg-pass','reg-pass2'].forEach(function(id) {
-      var el = document.getElementById(id); if (el) el.value = '';
-    });
-    setTimeout(function() { showTab('login'); }, 900);
-  } catch (e) {
-    var msg = e.message;
-    if (!msg || msg === 'Failed to fetch' || msg.includes('NetworkError')) {
-      msg = 'Cannot reach server. Make sure the app is running.';
-    }
-    setMsg('reg-msg', msg, 'error');
-  } finally {
-    if (btn) { btn.innerHTML = '<i class="fas fa-seedling"></i> Create My Account'; btn.disabled = false; }
-  }
+  // Simulate registration success
+  showToast(`Account created for ${name}! Please sign in. 🌱`, 'success');
+  // Reset fields
+  ['reg-name','reg-email','reg-phone','reg-location','reg-pass','reg-pass2'].forEach(id => {
+    let el = document.getElementById(id); if (el) el.value = '';
+  });
+  setTimeout(() => { showTab('login'); }, 900);
 }
 
-// ─── FORGOT PASSWORD ───
-async function showForgot() {
-  var email = prompt('Enter your registered email address:');
+function showForgot() {
+  var email = prompt('Enter your registered email address for password reset:');
   if (!email) return;
   if (!validateEmail(email)) { showToast('Please enter a valid email address', 'error'); return; }
-  try {
-    await fetch('/api/auth/forgot-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email })
-    });
-  } catch (e) {}
-  // Always show the same message for security (don't reveal if email exists)
-  showToast('If that account exists, a reset link has been sent.', 'success');
+  // Simulate password reset email
+  showToast(`If ${email} is registered, a secure reset link has been sent.`, 'success');
 }
 
-// ─── ENTER KEY on login ───
+// Make all buttons interactive: attach smooth demo handlers to extra buttons
 document.addEventListener('DOMContentLoaded', function() {
-  var passField = document.getElementById('login-pass');
-  if (passField) passField.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') doLogin();
+  // Smooth scroll for all anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const targetId = this.getAttribute('href');
+      if (targetId === '#') return;
+      const target = document.querySelector(targetId);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
   });
-  var regPass2 = document.getElementById('reg-pass2');
-  if (regPass2) regPass2.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') doRegister();
+  
+  // Enhance "Browse All Listings" button with demo feedback
+  let browseBtn = document.querySelector('.market-grid + div .btn-primary');
+  if (browseBtn) {
+    browseBtn.addEventListener('click', function(e) {
+      showToast('✨ Marketplace demo: connect to backend for full escrow and listings.', 'success');
+    });
+  }
+  
+  // Add click feedback for any primary/outline buttons not yet hooked (like explore features)
+  let exploreBtn = document.querySelector('.hero-actions .btn-outline');
+  if (exploreBtn) {
+    exploreBtn.addEventListener('click', function() {
+      showToast('🌿 Discover tools designed for African farmers.', 'success');
+    });
+  }
+  
+  // Add interactive for feature cards
+  document.querySelectorAll('.feat-card').forEach(card => {
+    card.addEventListener('click', () => {
+      showToast('🔧 Full feature demo available after login!', 'success');
+    });
   });
+  
+  // Product cards
+  document.querySelectorAll('.product-card').forEach(card => {
+    card.addEventListener('click', () => {
+      let product = card.querySelector('.product-name')?.innerText || 'product';
+      showToast(`🛒 Interested in ${product}? Login to contact seller.`, 'success');
+    });
+  });
+  
+  // Forum/community interaction
+  document.querySelectorAll('.forum-item').forEach(item => {
+    item.addEventListener('click', () => {
+      showToast('💬 Join the discussion! Sign in to reply or create threads.', 'success');
+    });
+  });
+  
+  // Security cards & footer links give demo info
+  document.querySelectorAll('.sec-item, .footer-col a').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (el.closest('.footer-col')) e.preventDefault();
+      showToast('🔒 ValmapsAgro prioritizes your data safety & transparency.', 'success');
+    });
+  });
+  
+  // Weather forecast day cards
+  document.querySelectorAll('.day-card').forEach(day => {
+    day.addEventListener('click', () => {
+      showToast('⛅ Detailed hourly forecast available after login.', 'success');
+    });
+  });
+  
+  // Extra demo: Join Free Today (already triggers register tab, but ensure toast)
+  let joinBtn = document.querySelector('.hero-actions .btn-primary');
+  if (joinBtn) {
+    joinBtn.addEventListener('click', function(e) {
+      if (!joinBtn.closest('.hero-actions')) return;
+      showToast('📝 Join thousands of farmers — registration is free!', 'success');
+    });
+  }
+  
+  // Let nav CTA also scroll to auth smoothly
+  let navCta = document.querySelector('.nav-cta');
+  if (navCta) {
+    navCta.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('auth').scrollIntoView({ behavior: 'smooth' });
+      showToast('🌱 Create your account or sign in below.', 'success');
+    });
+  }
+  
+  // Additional interactive message for 'Get Started' in nav-links (already smooth)
 });
 
-// ─── SCROLL REVEAL ───
+// Scroll reveal observer
 var _observer = new IntersectionObserver(function(entries) {
   entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.1 });
